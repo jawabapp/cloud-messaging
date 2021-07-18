@@ -1,0 +1,31 @@
+{
+    "name": "jawabapp/cloud-messaging",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ibraheem Qanah",
+            "email": "i.qanah@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "kreait/firebase-php": "^4.21",
+        "google/cloud-bigquery": "^1.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "JawabApp\\CloudMessaging\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "JawabApp\\CloudMessaging\\FCMServiceProvider"
+            ]
+        }
+    }
+}
