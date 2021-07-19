@@ -12,7 +12,7 @@ class PublishCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'jawab-fcm:publish';
+    protected $signature = 'cloud-messaging:publish';
 
     /**
      * The console command description.
@@ -29,12 +29,12 @@ class PublishCommand extends Command
     public function handle()
     {
         $this->call('vendor:publish', [
-            '--tag' => 'jawab-fcm-config',
+            '--tag' => 'cloud-messaging-config',
             '--force' => true,
         ]);
 
         $this->call('vendor:publish', [
-            '--tag' => 'jawab-fcm-assets',
+            '--tag' => 'cloud-messaging-assets',
             '--force' => true,
         ]);
     }

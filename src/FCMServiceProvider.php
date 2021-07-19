@@ -10,21 +10,27 @@ class FCMServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerRoutes();
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'jawab-fcm');
+
+        $this->registerMigrations();
+
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'cloud-messaging');
+
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
         $this->publishes([
-            __DIR__ . '/../config/jawab-fcm.php' => config_path('jawab-fcm.php'),
-        ], 'jawab-fcm-config');
+            __DIR__ . '/../config/cloud-messaging.php' => config_path('cloud-messaging.php'),
+        ], 'cloud-messaging-config');
 
         $this->publishes([
-            __DIR__ . '/../public' => public_path('vendor/jawab-fcm'),
-        ], 'jawab-fcm-assets');
+            __DIR__ . '/../public' => public_path('vendor/cloud-messaging'),
+        ], 'cloud-messaging-assets');
+
+        $this->registerCommands();
     }
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/jawab-fcm.php', 'jawab-fcm');
+        $this->mergeConfigFrom(__DIR__ . '/../config/cloud-messaging.php', 'cloud-messaging');
     }
 
     /**
@@ -48,8 +54,29 @@ class FCMServiceProvider extends ServiceProvider
     {
         return [
             'namespace' => 'JawabApp\CloudMessaging\Http\Controllers',
-            'prefix' => config('jawab-fcm.path'),
-            'middleware' => config('jawab-fcm.middleware'),
+            'prefix' => config('cloud-messaging.path'),
+            'middleware' => config('cloud-messaging.middleware'),
         ];
+    }
+
+    /**
+     * Register the package's migrations.
+     *
+     * @return void
+     */
+    private function registerMigrations()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        }
+    }
+
+    protected function registerCommands()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Console\PublishCommand::class
+            ]);
+        }
     }
 }

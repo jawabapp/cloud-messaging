@@ -1,4 +1,4 @@
-@extends('jawab-fcm::layouts.app')
+@extends('cloud-messaging::layouts.app')
 
 @section('content')
 

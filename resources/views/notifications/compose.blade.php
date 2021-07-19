@@ -1,4 +1,4 @@
-@extends('jawab-fcm::layouts.app')
+@extends('cloud-messaging::layouts.app')
 
 @section('content')
     <form method="POST" action="{{ route('jawab.notifications.send') }}" enctype="multipart/form-data" id="compose_notifications_form" onsubmit="return confirm('Do you really want to send the notifications?');">
@@ -52,9 +52,9 @@
                             </div>
                             <hr>
                             <jawab-target-editor
-                                target-audience-url="{{config('jawab-fcm.routes.target_audience')}}"
-                                filter-prefix-url="{{config('jawab-fcm.routes.filter_prefix')}}"
-                                :types="{{ json_encode(config('jawab-fcm.filter_types')) }}"
+                                target-audience-url="{{config('cloud-messaging.routes.target_audience')}}"
+                                filter-prefix-url="{{config('cloud-messaging.routes.filter_prefix')}}"
+                                :types="{{ json_encode(config('cloud-messaging.filter_types')) }}"
                                 >
                             </jawab-target-editor>
                         </div>

@@ -64,7 +64,7 @@ class PushNotificationJob implements ShouldQueue
                 'status' => 'processing'
             ]);
 
-            $notifiable_model = config('jawab-fcm.notifiable_model');
+            $notifiable_model = config('cloud-messaging.notifiable_model');
             $users = $notifiable_model::getJawabTargetAudience($this->notification->target);
 
             $response = collect();

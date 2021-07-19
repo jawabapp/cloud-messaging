@@ -1,8 +1,4 @@
-# JawabApp Notifications
-
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/jawab/fcm.svg?style=flat-square)](https://packagist.org/packages/jawab/fcm)
-
-![GitHub Actions](https://github.com/jawab/fcm/actions/workflows/main.yml/badge.svg)
+# JawabApp CloudMessaging
 
 ## Installation
 
@@ -66,7 +62,7 @@ public static function targetAudienceForCountries(Builder $query, $condition, $o
     }
 ```
 
-###### jawab-fcm.php config file
+###### cloud-messaging.php config file
 
 ```php
 'filter_types' => [
@@ -93,7 +89,7 @@ public static function targetAudienceForCountries(Builder $query, $condition, $o
 
 ##### change notifilable model
 
-###### jawab-fcm.php config file
+###### cloud-messaging.php config file
 
 ```php
 [
@@ -121,8 +117,8 @@ If you discover any security related issues, please email trmdy@hotmail.com inst
 
 ## Credits
 
--   [Ahmed Magdy](https://github.com/jawab)
--   [All Contributors](../../contributors)
+- [Ahmed Magdy](https://github.com/jawab)
+- [All Contributors](../../contributors)
 
 ## License
 

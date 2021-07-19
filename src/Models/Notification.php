@@ -29,6 +29,6 @@ class Notification extends Model
 
     public function user()
     {
-        return $this->belongsTo(config('jawab-fcm.user_model'));
+        return $this->belongsTo(config('cloud-messaging.user_model'));
     }
 }
