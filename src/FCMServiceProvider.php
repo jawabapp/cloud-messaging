@@ -24,6 +24,8 @@ class FCMServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../public' => public_path('vendor/cloud-messaging'),
         ], 'cloud-messaging-assets');
+
+        $this->registerCommands();
     }
 
     public function register()
