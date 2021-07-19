@@ -21,12 +21,12 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $notifications = Notification::latest()->paginate(10);
-        return view('jawab-fcm::notifications.index')->with('data', $notifications);
+        return view('cloud-messaging::notifications.index')->with('data', $notifications);
     }
 
     public function compose(Request $request)
     {
-        return view('jawab-fcm::notifications.compose');
+        return view('cloud-messaging::notifications.compose');
     }
 
     public function send(Request $request)
@@ -48,7 +48,7 @@ class NotificationController extends Controller
         $phone = $target['phone'] ?? '';
 
         if ($apps || $phone) {
-            $notifiable_model = config('jawab-fcm.notifiable_model');
+            $notifiable_model = config('cloud-messaging.notifiable_model');
             $users = $notifiable_model::getJawabTargetAudience($target);
 
             $campaign['tokens_count'] = $users->count();
@@ -123,7 +123,7 @@ class NotificationController extends Controller
 
         $this->prepareItem($notification, $data);
 
-        return view('jawab-fcm::notifications.report')->with('data', $data);
+        return view('cloud-messaging::notifications.report')->with('data', $data);
     }
 
     public function delete(Notification $notification)
@@ -199,7 +199,7 @@ class NotificationController extends Controller
         });
         \Storage::put('notifications-cohort.csv', csv($cohortData->all()));
 
-        return view('jawab-fcm::notifications.report')->with('data', $data)->with('cohort', $cohort);
+        return view('cloud-messaging::notifications.report')->with('data', $data)->with('cohort', $cohort);
     }
 
     private function prepareItem(Notification $item, Collection $data)
@@ -248,7 +248,7 @@ class NotificationController extends Controller
                         'vote_up' => $campaign->interactions['vote_up'] ?? 0,
                         'vote_down' => $campaign->interactions['vote_down'] ?? 0,
                         'comments' => $campaign->children_count,
-                        'target' => config('jawab-fcm.notifiable_model')::getJawabTargetAudienceString($item->target),
+                        'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
                         'campaign_created' => $campaign->created_at->toDateString(),
                         'campaign_title' => $campaign->content,
                         'campaign_type' => $campaign_type,
@@ -281,7 +281,7 @@ class NotificationController extends Controller
                         'vote_up' => 0,
                         'vote_down' => 0,
                         'comments' => 0,
-                        'target' => config('jawab-fcm.notifiable_model')::getJawabTargetAudienceString($item->target),
+                        'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
                         'campaign_created' => $campaign->created_at->toDateString(),
                         'campaign_title' => $campaign->hash_tag,
                         'campaign_type' => $campaign_type,
@@ -314,7 +314,7 @@ class NotificationController extends Controller
                         'vote_up' => 0,
                         'vote_down' => 0,
                         'comments' => 0,
-                        'target' => config('jawab-fcm.notifiable_model')::getJawabTargetAudienceString($item->target),
+                        'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
                         'campaign_created' => $campaign->created_at->toDateString(),
                         'campaign_title' => $campaign->nickname,
                         'campaign_type' => $campaign_type,
@@ -346,7 +346,7 @@ class NotificationController extends Controller
                     'vote_up' => 0,
                     'vote_down' => 0,
                     'comments' => 0,
-                    'target' => config('jawab-fcm.notifiable_model')::getJawabTargetAudienceString($item->target),
+                    'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
                     'campaign_created' => '',
                     'campaign_title' => '',
                     'campaign_type' => '',
@@ -412,8 +412,8 @@ class NotificationController extends Controller
         if ($clearCache || !\Cache::has($key)) {
 
             $bigQuery = new BigQueryClient([
-                'keyFilePath' => storage_path(config('jawab-fcm.big_query.key_file_path')),
-                'projectId' => config('jawab-fcm.big_query.project_id'),
+                'keyFilePath' => storage_path(config('cloud-messaging.big_query.key_file_path')),
+                'projectId' => config('cloud-messaging.big_query.project_id'),
             ]);
 
             $yesterday = now()->format('Y*');

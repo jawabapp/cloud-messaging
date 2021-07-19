@@ -14,11 +14,11 @@
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet" type="text/css">
 
     <!-- Styles -->
-    <link href="{{ asset(mix('app.css', 'vendor/jawab-fcm')) }}" rel="stylesheet" type="text/css">
+    <link href="{{ asset(mix('app.css', 'vendor/cloud-messaging')) }}" rel="stylesheet" type="text/css">
 
 </head>
 <body>
-    <div id="jawab-fcm">
+    <div id="cloud-messaging">
         <div class="container-fluid mb-5">
             <div class="d-flex align-items-center py-4 header">
 
@@ -76,7 +76,7 @@
 
 
     <!-- Scripts -->
-    <script src="{{ asset(mix('app.js', 'vendor/jawab-fcm')) }}"></script>
+    <script src="{{ asset(mix('app.js', 'vendor/cloud-messaging')) }}"></script>
 
     @stack('scripts')
 </body>
