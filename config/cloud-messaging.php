@@ -1,6 +1,6 @@
 <?php
 
-$path = env('JAWAB_CLOUD_MESSAGING_PATH', 'jawab-notifications') . '/api';
+$path = env('JAWAB_CLOUD_MESSAGING_PATH', 'jawab-notifications');
 
 return [
     'middleware' => [
@@ -14,10 +14,10 @@ return [
     'user_model' => \App\Models\User::class,
     'notifiable_model' => \App\Models\User::class,
     'routes' => [
-        'target_audience' => "/{$path}/target-audience",
-        'filter_prefix' => "/{$path}",
+        'target_audience' => "/{$path}/api/target-audience",
+        'filter_prefix' => "/{$path}/api",
         'campaign_prefix' => 'https://trends.jawab.app/',
-        'campaign_parser_prefix' => "/{$path}/parse",
+        'campaign_parser_prefix' => "/{$path}/api/parse",
     ],
     'filter_types' => [
         [
