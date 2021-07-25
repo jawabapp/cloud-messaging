@@ -1,6 +1,6 @@
 <?php
 
-$path = env('JAWAB_CLOUD_MESSAGING_PATH', 'jawab-notifications');
+$path = env('JAWAB_CLOUD_MESSAGING_PATH', 'jawab-notifications') . '/api';
 
 return [
     'middleware' => [
@@ -14,61 +14,16 @@ return [
     'user_model' => \App\Models\User::class,
     'notifiable_model' => \App\Models\User::class,
     'routes' => [
-        'target_audience' => "/{$path}/api/target-audience",
-        'filter_prefix' => '/admin/api',
+        'target_audience' => "/{$path}/target-audience",
+        'filter_prefix' => "/{$path}",
         'campaign_prefix' => 'https://trends.jawab.app/',
-        'campaign_parser_prefix' => '/admin/api/parse',
+        'campaign_parser_prefix' => "/{$path}/parse",
     ],
     'filter_types' => [
         [
             'value' => 'countries',
             'label' => 'Country/Region',
             'selectLabel' => 'Countries',
-            'conditions' => [
-                [
-                    'value' => 'is_in',
-                    'label' => 'Is in',
-                ],
-                [
-                    'value' => 'is_not_in',
-                    'label' => 'Is not in',
-                ]
-            ]
-        ],
-        [
-            'value' => 'tags',
-            'label' => 'Tags',
-            'selectLabel' => 'Tags',
-            'conditions' => [
-                [
-                    'value' => 'is_in',
-                    'label' => 'Is in',
-                ],
-                [
-                    'value' => 'is_not_in',
-                    'label' => 'Is not in',
-                ]
-            ]
-        ],
-        [
-            'value' => 'tag-groups',
-            'label' => 'Tag Groups',
-            'selectLabel' => 'Tag Groups',
-            'conditions' => [
-                [
-                    'value' => 'is_in',
-                    'label' => 'Is in',
-                ],
-                [
-                    'value' => 'is_not_in',
-                    'label' => 'Is not in',
-                ]
-            ]
-        ],
-        [
-            'value' => 'services',
-            'label' => 'Services',
-            'selectLabel' => 'Services',
             'conditions' => [
                 [
                     'value' => 'is_in',
