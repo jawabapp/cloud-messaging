@@ -14,6 +14,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import JawabTargetAppComponent from "./JawabTargetAppComponent";
 export default {
   name:"JawabTargetComponent",

@@ -2,7 +2,7 @@
 
 @section('content')
     <form method="POST" action="{{ route('jawab.notifications.send') }}" enctype="multipart/form-data" id="compose_notifications_form" onsubmit="return confirm('Do you really want to send the notifications?');">
-        @csrf
+        {{ csrf_field() }}
         <div>
             <div class="card-header">
                 <div class="row">
