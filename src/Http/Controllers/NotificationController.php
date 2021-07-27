@@ -20,7 +20,7 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        $notifications = Notification::latest()->paginate(10);
+        $notifications = Notification::with('user')->latest()->paginate(10);
         return view('cloud-messaging::notifications.index')->with('data', $notifications);
     }
 
