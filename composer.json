@@ -25,7 +25,7 @@
         }
     },
     "require": {
-        "guzzlehttp/guzzle": "7.4.x-dev",
+        "guzzlehttp/guzzle": "^6.3",
         "nesbot/carbon": "2.x-dev"
     }
 }

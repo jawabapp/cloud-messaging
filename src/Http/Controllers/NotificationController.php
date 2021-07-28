@@ -5,7 +5,6 @@ namespace JawabApp\CloudMessaging\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Tag;
 use App\Models\Post;
-use App\Models\User;
 use App\Models\Account;
 use App\Models\Mongo\Event;
 use Illuminate\Http\Request;
