@@ -5,7 +5,7 @@
 You can install the package via composer:
 
 ```bash
-composer require jawab/firebase-cloud-messaging
+composer require jawabapp/cloud-messaging
 ```
 
 ## Usage
@@ -85,6 +85,39 @@ public static function targetAudienceForCountries(Builder $query, $condition, $o
 ]
 ```
 
+###### web.php web route file
+
+```php
+Route::group(['prefix' => env('JAWAB_CLOUD_MESSAGING_PATH', 'jawab-notifications')], function () {
+    Route::group(['prefix' => 'api'], function () {
+        Route::get('countries', 'Api\Admin\CountryController@index');
+        //...
+    });
+});
+```
+
+###### CountryController.php web route file
+
+```php
+public function countries(Request $request)
+{
+
+    $mobile_os = $request->get('os');
+
+    return User::select(['phone_country_code'])
+        ->distinct()
+        ->whereNotNull('phone_country_code')
+        ->where('os', $mobile_os)
+        ->get()
+        ->map(function ($item) {
+            return [
+                'value' => $item->phone_country_code,
+                'text' => $item->phone_country_code,
+            ];
+        });
+}
+```
+
 ---
 
 ##### change notifilable model
@@ -93,14 +126,8 @@ public static function targetAudienceForCountries(Builder $query, $condition, $o
 
 ```php
 [
-	'notifiable_model' => \App\Models\UserMobile::class,
+	'notifiable_model' => \App\Models\User::class,
 ]
-```
-
-### Testing
-
-```bash
-composer test
 ```
 
 ### Changelog
