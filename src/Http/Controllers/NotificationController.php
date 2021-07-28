@@ -218,183 +218,50 @@ class NotificationController extends Controller
         });
 
         if (request()->get('google')) {
-            $bigQueryCounts = $this->getNotificationCountsFromBigQuery();
+            // $bigQueryCounts = $this->getNotificationCountsFromBigQuery();
             $bigQueryCount = $bigQueryCounts->where('notification_id', $item->id)->first();
         } else {
             $bigQueryCount = $this->getNotificationReport($item->id);
         }
 
-        switch ($campaign_type) {
-            case 'post':
-                $campaign = Post::find($campaign_id);
+        $campaign = null;
 
-                if ($campaign) {
-                    $data->push([
-                        'id' => $item->id,
-                        'fcm_sent_count' => $fcm_sent_count,
-                        'fcm_notification_received_count' => $bigQueryCount['notification_received_count'] ?? 0,
-                        'fcm_notification_open_count' => $bigQueryCount['notification_open_count'] ?? 0,
-                        'fcm_post_view_count' => $bigQueryCount['post_view_count'] ?? 0,
-                        'fcm_post_vote_count' => $bigQueryCount['post_vote_count'] ?? 0,
-                        //                        'fcm_post_share_count' => $bigQueryCount['post_share_count'] ?? 0,
-                        'fcm_post_comment_count' => $bigQueryCount['post_comment_count'] ?? 0,
-                        'title' => $item->title,
-                        'text' => $item->text,
-                        'sent_by' => $item->user->name ?? '',
-                        'created' => $item->created_at->toDateString(),
-                        'tokens_count' => $campaign_tokens_count,
-                        'viewed' => $campaign->interactions['viewed'] ?? 0,
-                        'vote_up' => $campaign->interactions['vote_up'] ?? 0,
-                        'vote_down' => $campaign->interactions['vote_down'] ?? 0,
-                        'comments' => $campaign->children_count,
-                        'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
-                        'campaign_created' => $campaign->created_at->toDateString(),
-                        'campaign_title' => $campaign->content,
-                        'campaign_type' => $campaign_type,
-                        'campaign_id' => $campaign_id,
-                        'campaign_link' => $campaign_link,
-                    ]);
-                }
-
-                break;
-
-            case 'tag':
-                $campaign = Tag::find($campaign_id);
-
-                if ($campaign) {
-                    $data->push([
-                        'id' => $item->id,
-                        'fcm_sent_count' => $fcm_sent_count,
-                        'fcm_notification_received_count' => $bigQueryCount['notification_received_count'] ?? 0,
-                        'fcm_notification_open_count' => $bigQueryCount['notification_open_count'] ?? 0,
-                        'fcm_post_view_count' => $bigQueryCount['post_view_count'] ?? 0,
-                        'fcm_post_vote_count' => $bigQueryCount['post_vote_count'] ?? 0,
-                        //                        'fcm_post_share_count' => $bigQueryCount['post_share_count'] ?? 0,
-                        'fcm_post_comment_count' => $bigQueryCount['post_comment_count'] ?? 0,
-                        'title' => $item->title,
-                        'text' => $item->text,
-                        'sent_by' => $item->user->name ?? '',
-                        'created' => $item->created_at->toDateString(),
-                        'tokens_count' => $campaign_tokens_count,
-                        'viewed' => 0,
-                        'vote_up' => 0,
-                        'vote_down' => 0,
-                        'comments' => 0,
-                        'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
-                        'campaign_created' => $campaign->created_at->toDateString(),
-                        'campaign_title' => $campaign->hash_tag,
-                        'campaign_type' => $campaign_type,
-                        'campaign_id' => $campaign_id,
-                        'campaign_link' => $campaign_link,
-                    ]);
-                }
-
-                break;
-
-            case 'account':
-                $campaign = Account::find($campaign_id);
-
-                if ($campaign) {
-                    $data->push([
-                        'id' => $item->id,
-                        'fcm_sent_count' => $fcm_sent_count,
-                        'fcm_notification_received_count' => $bigQueryCount['notification_received_count'] ?? 0,
-                        'fcm_notification_open_count' => $bigQueryCount['notification_open_count'] ?? 0,
-                        'fcm_post_view_count' => $bigQueryCount['post_view_count'] ?? 0,
-                        'fcm_post_vote_count' => $bigQueryCount['post_vote_count'] ?? 0,
-                        //                        'fcm_post_share_count' => $bigQueryCount['post_share_count'] ?? 0,
-                        'fcm_post_comment_count' => $bigQueryCount['post_comment_count'] ?? 0,
-                        'title' => $item->title,
-                        'text' => $item->text,
-                        'sent_by' => $item->user->name ?? '',
-                        'created' => $item->created_at->toDateString(),
-                        'tokens_count' => $campaign_tokens_count,
-                        'viewed' => 0,
-                        'vote_up' => 0,
-                        'vote_down' => 0,
-                        'comments' => 0,
-                        'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
-                        'campaign_created' => $campaign->created_at->toDateString(),
-                        'campaign_title' => $campaign->nickname,
-                        'campaign_type' => $campaign_type,
-                        'campaign_id' => $campaign_id,
-                        'campaign_link' => $campaign_link,
-                    ]);
-                }
-
-                break;
-
-            default:
-                $campaign = null;
-
-                $data->push([
-                    'id' => $item->id,
-                    'fcm_sent_count' => $fcm_sent_count,
-                    'fcm_notification_received_count' => $bigQueryCount['notification_received_count'] ?? 0,
-                    'fcm_notification_open_count' => $bigQueryCount['notification_open_count'] ?? 0,
-                    'fcm_post_view_count' => $bigQueryCount['post_view_count'] ?? 0,
-                    'fcm_post_vote_count' => $bigQueryCount['post_vote_count'] ?? 0,
-                    //                    'fcm_post_share_count' => $bigQueryCount['post_share_count'] ?? 0,
-                    'fcm_post_comment_count' => $bigQueryCount['post_comment_count'] ?? 0,
-                    'title' => $item->title,
-                    'text' => $item->text,
-                    'sent_by' => $item->user->name ?? '',
-                    'created' => $item->created_at->toDateString(),
-                    'tokens_count' => $campaign_tokens_count,
-                    'viewed' => 0,
-                    'vote_up' => 0,
-                    'vote_down' => 0,
-                    'comments' => 0,
-                    'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
-                    'campaign_created' => '',
-                    'campaign_title' => '',
-                    'campaign_type' => '',
-                    'campaign_id' => '',
-                    'campaign_link' => '',
-                ]);
-                break;
-        }
+        $data->push([
+            'id' => $item->id,
+            'fcm_sent_count' => $fcm_sent_count,
+            'fcm_notification_received_count' => $bigQueryCount['notification_received_count'] ?? 0,
+            'fcm_notification_open_count' => $bigQueryCount['notification_open_count'] ?? 0,
+            'fcm_post_view_count' => $bigQueryCount['post_view_count'] ?? 0,
+            'fcm_post_vote_count' => $bigQueryCount['post_vote_count'] ?? 0,
+            //                    'fcm_post_share_count' => $bigQueryCount['post_share_count'] ?? 0,
+            'fcm_post_comment_count' => $bigQueryCount['post_comment_count'] ?? 0,
+            'title' => $item->title,
+            'text' => $item->text,
+            'sent_by' => $item->user->name ?? '',
+            'created' => $item->created_at->toDateString(),
+            'tokens_count' => $campaign_tokens_count,
+            'viewed' => 0,
+            'vote_up' => 0,
+            'vote_down' => 0,
+            'comments' => 0,
+            'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
+            'campaign_created' => '',
+            'campaign_title' => '',
+            'campaign_type' => '',
+            'campaign_id' => '',
+            'campaign_link' => '',
+        ]);
     }
 
     private function getNotificationReport($id)
     {
-
         return [
-            'notification_received_count' => Event::where('event_name', 'notification_received_jawab')
-                ->where('event_params', 'elemMatch', [
-                    "key" => "notification_id",
-                    "value.string_value" => "{$id}",
-                ])->distinct('user_pseudo_id')->get()->count(),
-
-            'notification_open_count' => Event::where('event_name', 'notification_open_jawab')
-                ->where('event_params', 'elemMatch', [
-                    "key" => "notification_id",
-                    "value.string_value" => "{$id}",
-                ])->distinct('user_pseudo_id')->get()->count(),
-
-            'post_view_count' => Event::where('event_name', 'post_view')
-                ->where('event_params', 'elemMatch', [
-                    "key" => "notification_id",
-                    "value.string_value" => "{$id}",
-                ])->distinct('user_pseudo_id')->get()->count(),
-
-            'post_vote_count' => Event::where('event_name', 'post_vote')
-                ->where('event_params', 'elemMatch', [
-                    "key" => "notification_id",
-                    "value.string_value" => "{$id}",
-                ])->distinct('user_pseudo_id')->get()->count(),
-
-            'post_share_count' => Event::where('event_name', 'share')
-                ->where('event_params', 'elemMatch', [
-                    "key" => "notification_id",
-                    "value.string_value" => "{$id}",
-                ])->distinct('user_pseudo_id')->get()->count(),
-
-            'post_comment_count' => Event::where('event_name', 'publish_comment')
-                ->where('event_params', 'elemMatch', [
-                    "key" => "notification_id",
-                    "value.string_value" => "{$id}",
-                ])->distinct('user_pseudo_id')->get()->count(),
+            'notification_received_count' => 0,
+            'notification_open_count' => 0,
+            'post_view_count' => 0,
+            'post_vote_count' => 0,
+            'post_share_count' => 0,
+            'post_comment_count' => 0,
         ];
     }
 
