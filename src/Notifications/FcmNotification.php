@@ -28,7 +28,7 @@ class FcmNotification
         try {
             $body = array_merge($message, ['registration_ids' => $tokens]);
 
-            return $client->request(
+            $response = $client->request(
                 'POST',
                 'https://fcm.googleapis.com/fcm/send',
                 [
@@ -38,7 +38,8 @@ class FcmNotification
                     ],
                     'body' => json_encode($body)
                 ]
-            )->getBody();
+            );
+            return json_decode($response->getBody());
         } catch (\Exception $e) {
             return 'Fcm_Notification (' . $e->getMessage() . ')';
         }
