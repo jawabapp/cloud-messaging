@@ -3,49 +3,42 @@
 namespace JawabApp\CloudMessaging\Notifications;
 
 use Carbon\Carbon;
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\ServiceAccount;
-
-/*
- * https://github.com/kreait/firebase-php/blob/master/docs/cloud-messaging.rst
- */
+use GuzzleHttp\Client;
 
 class FcmNotification
 {
-
-    private $channel;
+    protected $client;
 
     public function __construct()
     {
-        $firebase = (new Factory())->withServiceAccount(
-            ServiceAccount::fromJsonFile(storage_path(env('FIREBASE_SERVER')))
-        )->create();
-
-        $this->channel = $firebase->getMessaging();
+        $this->client = new Client();
     }
 
     public static function send($message, array $tokens)
     {
-
         if (!$tokens) {
             return 'Fcm_Notification (No Tokens)';
         }
+        static $client;
 
-        static $channel;
-
-        if (is_null($channel)) {
-            $channel = (new self())->channel;
+        if (is_null($client)) {
+            $client = (new self())->client;
         }
 
         try {
-            $report = $channel->sendMulticast($message, $tokens);
+            $body = array_merge($message, ['registration_ids' => $tokens]);
 
-            return [
-                'success' => $report->successes()->count(),
-                'failure' => $report->failures()->count(),
-                'invalidTokens' => $report->invalidTokens(),
-                'unknownTokens' => $report->unknownTokens()
-            ];
+            return $client->request(
+                'POST',
+                'https://fcm.googleapis.com/fcm/send',
+                [
+                    'headers' => [
+                        'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
+                        'Content-Type'  => 'application/json'
+                    ],
+                    'body' => json_encode($body)
+                ]
+            )->getBody();
         } catch (\Exception $e) {
             return 'Fcm_Notification (' . $e->getMessage() . ')';
         }
@@ -54,7 +47,7 @@ class FcmNotification
     public static function prepare(array $payload, $asData = true, $silent = false)
     {
 
-        $expiration = Carbon::today()->addDays(7)->getPreciseTimestamp(0);
+        $expiration = Carbon::today()->addDays(7);
 
         $rawMessage = [
             'android' => [

@@ -9,10 +9,6 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {
-        "kreait/firebase-php": "^4.21",
-        "google/cloud-bigquery": "^1.12"
-    },
     "autoload": {
         "psr-4": {
             "JawabApp\\CloudMessaging\\": "src/"
@@ -27,5 +23,9 @@
                 "JawabApp\\CloudMessaging\\FCMServiceProvider"
             ]
         }
+    },
+    "require": {
+        "guzzlehttp/guzzle": "7.4.x-dev",
+        "nesbot/carbon": "2.x-dev"
     }
 }
