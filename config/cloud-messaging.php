@@ -51,24 +51,6 @@ return [
                     'label' => 'Is not in',
                 ]
             ]
-        ],
-        [
-            'value' => 'hours',
-            'label' => 'Singed up in the last ⌛️',
-            'selectLabel' => 'hours',
-            'type' => 'SINGLE_SELECT',
-            'conditions' => [
-                [
-                    'value' => '=',
-                    'label' => '=',
-                ]
-            ],
-            'options' => array_map(function ($hour) {
-                return [
-                    'value' => $hour,
-                    'text' => $hour == 1 ? str_plural('hour', $hour) : $hour . ' ' . str_plural('hour', $hour),
-                ];
-            }, range(1, 24))
-        ],
+        ]
     ]
 ];
