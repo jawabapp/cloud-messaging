@@ -24,6 +24,7 @@ return [
             'value' => 'countries',
             'label' => 'Country/Region',
             'selectLabel' => 'Countries',
+            'type' => 'MULTI_SELECT',
             'conditions' => [
                 [
                     'value' => 'is_in',
@@ -39,6 +40,7 @@ return [
             'value' => 'registers',
             'label' => 'Register @',
             'selectLabel' => 'Registers',
+            'type' => 'MULTI_SELECT',
             'conditions' => [
                 [
                     'value' => 'is_in',
