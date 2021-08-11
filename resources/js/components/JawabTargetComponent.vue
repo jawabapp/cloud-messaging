@@ -1,5 +1,10 @@
 <template>
   <div>
+    <div class="form-group">
+        <label for="phone" class="col-form-label text-md-right">QL (optional)</label>
+        <textarea :name="`target[ql]`" id="ql" v-model="ql" cols="30" rows="3" class="form-control my-2"></textarea>
+    </div>
+    <hr>
     <div>
       <div v-for="(app, index) in apps" :key="index" class="mb-3">
         <jawab-target-app :types="types" :filter-prefix-url="filterPrefixUrl" :app="app" @remove="remove" />
@@ -37,6 +42,7 @@ export default {
   },
   data() {
     return {
+      ql: '',
       apps: [],
       audienceCount: 0,
     }
@@ -49,6 +55,7 @@ export default {
       this.apps.splice(this.apps.indexOf(app), 1)
     },
     checkCount() {
+      console.log($("form#compose_notifications_form").serialize());
       axios.post(this.targetAudienceUrl, $("form#compose_notifications_form").serialize())
           .then(res => {
             this.audienceCount = res.data

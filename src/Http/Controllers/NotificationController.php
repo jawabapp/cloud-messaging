@@ -218,9 +218,11 @@ class NotificationController extends Controller
         });
 
         if (request()->get('google')) {
+            //TODO: check big query
             // $bigQueryCounts = $this->getNotificationCountsFromBigQuery();
             $bigQueryCount = $bigQueryCounts->where('notification_id', $item->id)->first();
         } else {
+            //TODO: update count in report
             $bigQueryCount = $this->getNotificationReport($item->id);
         }
 

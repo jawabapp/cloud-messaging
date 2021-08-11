@@ -99,7 +99,7 @@ Route::group(['prefix' => env('JAWAB_CLOUD_MESSAGING_PATH', 'jawab-notifications
 ###### CountryController.php web route file
 
 ```php
-public function countries(Request $request)
+public function index(Request $request)
 {
 
     $mobile_os = $request->get('os');

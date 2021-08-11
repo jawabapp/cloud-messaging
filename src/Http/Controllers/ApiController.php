@@ -15,7 +15,6 @@ class ApiController extends Controller
      */
     public function targetAudience(Request $request)
     {
-
         $target = $request->get('target');
 
         $apps = $target['app'] ?? [];

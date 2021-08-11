@@ -46,7 +46,7 @@
                         <td>{{ $item->status ?? 'completed' }}</td>
                         <td class="text-center">
                             <a href="{{ route('jawab.notifications.show', [$item->id]) }}" class='btn btn-warning btn-sm'>View</a>
-                            @if($item->status === 'pending')
+                            @if($item->status === 'pending' && isset($item->schedule['type']) && $item->schedule['type'] === 'Scheduled')
                                 <a href="{{ route('jawab.notifications.delete', [$item->id]) }}" class='btn btn-danger btn-sm'>Delete</a>
                             @endif
                         </td>

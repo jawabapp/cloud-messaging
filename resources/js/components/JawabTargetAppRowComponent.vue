@@ -14,19 +14,32 @@
         </select>
       </div>
       <div class="col-md-4">
-        <ejs-multiselect
-            id='multiselect'
-            class='audience'
-            mode="CheckBox"
-            :name="`target[app][${app}][and][${audience}][options][]`"
-            :placeholder="`Select ${typeObject.selectLabel} ...`"
-            :dataSource='options'
-            :fields='fields'
-            :allowFiltering='true'
-            :showSelectAll='true'
-            selectAllText="Select All"
-            unSelectAllText="unSelect All">
-        </ejs-multiselect>
+        <template v-if="typeObject.type == 'MULTI_SELECT'">
+          <ejs-multiselect
+              id='multiselect'
+              class='audience'
+              mode="CheckBox"
+              :name="`target[app][${app}][and][${audience}][options][]`"
+              :placeholder="`Select ${typeObject.selectLabel} ...`"
+              :dataSource='options'
+              :fields='fields'
+              :allowFiltering='true'
+              :showSelectAll='true'
+              selectAllText="Select All"
+              unSelectAllText="unSelect All">
+          </ejs-multiselect>
+        </template>
+        <template v-else-if="typeObject.type == 'SINGLE_SELECT'">
+            <ejs-dropdownlist 
+              id='dropdownlist'
+              ref='dropdown'
+              :name="`target[app][${app}][and][${audience}][options][]`"
+              :placeholder="`Select ${typeObject.selectLabel} ...`"
+              :dataSource='options'
+              :fields='fields'
+              :allowFiltering='true'>
+              </ejs-dropdownlist>
+        </template>
       </div>
     </template>
     <template v-else>
@@ -78,8 +91,8 @@ export default {
     type(val) {
       this.$emit('changeType', this.audience, val);
 
-      this.getOptions(val);
       this.typeObject = this.types.find(type => (type.value === val));
+      this.getOptions(val);
     }
   },
   methods: {
@@ -87,14 +100,17 @@ export default {
       return Object.values(this.appTypes).includes(type.value)
     },
     getOptions(type) {
-      let os = document.getElementById(`audience-os-${this.app}`);
-
-      axios.get(`${this.filterPrefixUrl}/${type}?os=${os.value}`)
-          .then(res => {
-            this.options = res.data
-          }).catch(err => {
-        console.log(err)
-      });
+      if (this.typeObject.options && this.typeObject.options.length) {
+        this.options = this.typeObject.options
+      } else {
+        let os = document.getElementById(`audience-os-${this.app}`);
+        axios.get(`${this.filterPrefixUrl}/${type}?os=${os.value}`)
+            .then(res => {
+              this.options = res.data
+            }).catch(err => {
+          console.log(err)
+        });
+      }
     }
   }
 }
