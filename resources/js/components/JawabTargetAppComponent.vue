@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-    <div class="card-body">
+    <div class="card-body bg-light">
       <div class="row">
         <div class="col-md-4 border-right">
           <span style="line-height: 37px;">APP</span>

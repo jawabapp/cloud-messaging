@@ -60,6 +60,7 @@ trait HasTargetAudience
 
         $apps = $target['app'] ?? [];
         $phone = $target['phone'] ?? '';
+        $ql = $target['ql'] ?? '';
 
         $tableName = (new self)->getTable();
 
@@ -68,7 +69,7 @@ trait HasTargetAudience
         //TODO: check inactive users
         // $query->whereNull('inactive_at');
 
-        $query->where(function ($qq) use ($apps, $phone) {
+        $query->where(function ($qq) use ($apps, $phone, $ql) {
 
             if ($phone) {
 
@@ -77,6 +78,12 @@ trait HasTargetAudience
                 if (method_exists(self::class, $method = 'targetAudienceForPhoneNumbers')) {
                     self::{$method}($qq, $phones);
                 }
+            }
+
+            if ($ql) {
+                $qq->where(function ($q) use ($ql) {
+                    $q->whereRaw($ql);
+                });
             }
 
             $joins = [];
