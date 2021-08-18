@@ -3,6 +3,7 @@
 namespace JawabApp\CloudMessaging\Traits;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 trait HasTargetAudience
 {
@@ -64,12 +65,12 @@ trait HasTargetAudience
 
         $tableName = (new self)->getTable();
 
-        $query = self::select($tableName . '.*')->distinct();
+        $query = self::distinct();
 
         //TODO: check inactive users
         // $query->whereNull('inactive_at');
 
-        $query->where(function ($qq) use ($apps, $phone, $ql) {
+        $query->where(function ($qq) use ($apps, $phone, $ql, $query) {
 
             if ($phone) {
 
@@ -87,6 +88,7 @@ trait HasTargetAudience
             }
 
             $joins = [];
+            $joins['query'] = $query;
 
             foreach ($apps as $app) {
 
