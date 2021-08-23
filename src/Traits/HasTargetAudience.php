@@ -65,7 +65,7 @@ trait HasTargetAudience
 
         $tableName = (new self)->getTable();
 
-        $query = self::distinct();
+        $query = self::select($tableName . '.*')->distinct();
 
         //TODO: check inactive users
         // $query->whereNull('inactive_at');
