@@ -32,8 +32,8 @@ class NotificationController extends Controller
     {
 
         $this->validate($request, [
-            'title' => 'nullable|string|max:40',
-            'text' => 'required|string|max:90',
+            'title' => 'nullable|string|max:140',
+            'text' => 'required|string|max:240',
             'image' => 'image|mimetypes:' . config('mimetypes.image') . '|max:300',
             'target' => 'required|array',
             'target.phone' => 'nullable|string',

@@ -5,14 +5,14 @@
         <div class="form-group">
           <label for="title" class="col-form-label text-md-right">{{ titleLabel }}</label>
           <input id="title" type="text" class="form-control" :class="{ 'is-invalid' : errorTitle }" name="title" v-model="titleModel" :placeholder="titlePlaceholder" >
-          <jawab-character-counter :text="titleModel" :limit="40" ></jawab-character-counter>
+          <jawab-character-counter :text="titleModel" :limit="140" ></jawab-character-counter>
           <span v-if="errorTitle" class="invalid-feedback" role="alert"><strong>{{ errorTitle }}</strong></span>
         </div>
 
         <div class="form-group">
           <label for="text" class="col-form-label text-md-right">{{ textLabel }}</label>
           <textarea id="text" class="form-control" :class="{ 'is-invalid' : errorText }" rows="4" cols="50" name="text" v-model="textModel" :placeholder="textPlaceholder" ></textarea>
-          <jawab-character-counter :text="textModel" :limit="90" ></jawab-character-counter>
+          <jawab-character-counter :text="textModel" :limit="240" ></jawab-character-counter>
           <span v-if="errorText" class="invalid-feedback" role="alert"><strong>{{ errorText }}</strong></span>
         </div>
 
