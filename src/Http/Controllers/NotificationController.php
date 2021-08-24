@@ -32,6 +32,7 @@ class NotificationController extends Controller
     {
 
         $this->validate($request, [
+            'extra_info.name' => 'required|string|max:140',
             'title' => 'nullable|string|max:140',
             'text' => 'required|string|max:240',
             'image' => 'image|mimetypes:' . config('mimetypes.image') . '|max:300',
@@ -85,6 +86,7 @@ class NotificationController extends Controller
 
             $notification = Notification::create([
                 'image'  => $imageUrl,
+                'extra_info'  => $request->get('extra_info'),
                 'title'  => $request->get('title'),
                 'text'   => $request->get('text'),
                 'target' => $request->get('target'),

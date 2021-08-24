@@ -123,6 +123,7 @@ export default {
     }
   },
   created() {
+    this.nameModel = this.name;
     this.titleModel = this.title;
     this.textModel = this.text;
   }

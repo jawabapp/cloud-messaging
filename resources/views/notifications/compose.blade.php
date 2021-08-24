@@ -22,9 +22,11 @@
                     </div>
                     <div class="card-body">
                         <jawab-notification-editor
+                            name="{{ old('name') }}"
                             title="{{ old('title') }}"
                             text="{{ old('text') }}"
                             error-image="{{ $errors->first('image') }}"
+                            error-name="{{ $errors->first('extra_info.name') }}"
                             error-title="{{ $errors->first('title') }}"
                             error-text="{{ $errors->first('text') }}"
                         ></jawab-notification-editor>
@@ -33,7 +35,19 @@
 
                 <div class="card mt-3">
                     <div class="card-header">
-                        <span class="badge badge-secondary">2</span> Target (audience)
+                        <span class="badge badge-secondary">2</span> Extra Information
+                    </div>
+                    <div class="card-body">
+                        <jawab-notification-extra-info
+                            name="{{ old('extra_info.name') }}"
+                            error-name="{{ $errors->first('extra_info.name') }}"
+                        ></jawab-notification-extra-info>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <span class="badge badge-secondary">3</span> Target (audience)
                     </div>
                     <div class="card-body">
                         @if ($errors->has('target.*'))
@@ -63,7 +77,7 @@
 
                 <div class="card mt-3">
                     <div class="card-header">
-                        <span class="badge badge-secondary">3</span> Scheduling
+                        <span class="badge badge-secondary">4</span> Scheduling
                     </div>
                     <div class="card-body">
                         <jawab-scheduling-editor
