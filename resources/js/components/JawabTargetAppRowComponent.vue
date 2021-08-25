@@ -5,11 +5,11 @@
         <option value="">Select ...</option>
         <option v-for="(item,index) in types" :key="index" :value="item.value" :disabled="disabledType(item)">{{item.label}}</option>
       </select>
-      <input type="hidden" :name="`target[app][${app}][and][${audience}][type]`" v-model="type" >
+      <input type="hidden" :name="`target[app][${appKey}][and][${audienceKey}][type]`" v-model="type" >
     </div>
     <template v-if="typeObject">
       <div class="col-md-4 border-right">
-        <select :name="`target[app][${app}][and][${audience}][condition]`" class="custom-select audience">
+        <select v-model="condition" :name="`target[app][${appKey}][and][${audienceKey}][condition]`" class="custom-select audience">
           <option v-for="(condition,index) in typeObject.conditions" :key="index" :value="condition.value">{{condition.label}}</option>
         </select>
       </div>
@@ -19,12 +19,13 @@
               id='multiselect'
               class='audience'
               mode="CheckBox"
-              :name="`target[app][${app}][and][${audience}][options][]`"
+              :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
               :placeholder="`Select ${typeObject.selectLabel} ...`"
               :dataSource='options'
               :fields='fields'
               :allowFiltering='true'
               :showSelectAll='true'
+              v-model="values"
               selectAllText="Select All"
               unSelectAllText="unSelect All">
           </ejs-multiselect>
@@ -33,10 +34,11 @@
             <ejs-dropdownlist 
               id='dropdownlist'
               ref='dropdown'
-              :name="`target[app][${app}][and][${audience}][options][]`"
+              :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
               :placeholder="`Select ${typeObject.selectLabel} ...`"
               :dataSource='options'
               :fields='fields'
+              v-model="values"
               :allowFiltering='true'>
               </ejs-dropdownlist>
         </template>
@@ -53,13 +55,22 @@ import axios from "axios";
 export default {
   name:"JawabTargetAppRowComponent",
   props: {
-    app: {
+    appKey: {
       type: Number,
       required: true,
       default: 1
     },
-    audience: {
+    app: {
+      type: Object,
+      required: true,
+    },
+    audienceKey: {
       type: Number,
+      required: true,
+      default: 0
+    },
+    audience: {
+      type: Object,
       required: true,
       default: 0
     },
@@ -84,8 +95,15 @@ export default {
       fields : { text: 'text', value: 'value' },
       options: [],
       type: '',
-      typeObject: null
+      typeObject: null,
+      condition: null,
+      values:[]
     }
+  },
+  mounted(){
+    this.type = this.audience.type || '';
+    this.condition = this.audience.condition || null;
+    this.values = this.audience.options || [];
   },
   watch: {
     type(val) {
@@ -115,7 +133,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-
-</style>

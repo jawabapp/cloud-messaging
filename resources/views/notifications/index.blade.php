@@ -46,10 +46,11 @@
                             {{ $scheduleType . ' ' . $scheduleDate }}
                         </td>
                         <td>{{ $item->status ?? 'completed' }}</td>
-                        <td class="text-center">
-                            <a href="{{ route('jawab.notifications.show', [$item->id]) }}" class='btn btn-warning btn-sm'>View</a>
+                        <td class="text-center d-flex flex-row border-0">
+                            <a href="{{ route('jawab.notifications.compose', ['notification'=>$item->id]) }}" class='btn btn-info btn-sm'>Copy</a>
+                            <a href="{{ route('jawab.notifications.show', [$item->id]) }}" class='ml-1 btn btn-warning btn-sm'>View</a>
                             @if($item->status === 'pending' && isset($item->schedule['type']) && $item->schedule['type'] === 'Scheduled')
-                                <a href="{{ route('jawab.notifications.delete', [$item->id]) }}" class='btn btn-danger btn-sm'>Delete</a>
+                                <a href="{{ route('jawab.notifications.delete', [$item->id]) }}" class='ml-1 btn btn-danger btn-sm'>Delete</a>
                             @endif
                         </td>
                     </tr>

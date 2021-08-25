@@ -23,9 +23,9 @@ class NotificationController extends Controller
         return view('cloud-messaging::notifications.index')->with('data', $notifications);
     }
 
-    public function compose(Request $request)
+    public function compose(Request $request, ?Notification $notification = null)
     {
-        return view('cloud-messaging::notifications.compose');
+        return view('cloud-messaging::notifications.compose', compact('notification'));
     }
 
     public function send(Request $request)
