@@ -76,7 +76,7 @@
                     </div>
                     <div class="card-body">
                         <jawab-scheduling-editor
-                            prop-schedule="{{ json_encode(old('schedule')) }}"
+                            prop-schedule="{{ json_encode(old('schedule',$notification->schedule)) }}"
                         ></jawab-scheduling-editor>
                     </div>
                 </div>
