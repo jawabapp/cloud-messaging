@@ -45,16 +45,6 @@
                             @endif
                             error-extra-info='@json($errors->get('extra_info.*'))'
                         ></jawab-notification-extra-info>
-
-                        {{-- @if ($errors->has('extra_info.*'))
-                            <div class="alert alert-danger" role="alert">
-                                @foreach ($errors->get('extra_info.*') as $messages)
-                                    @foreach ($messages as $message)
-                                        <strong>{{ $message }}</strong>
-                                    @endforeach
-                                @endforeach
-                            </div>
-                        @endif --}}
                     </div>
                 </div>
 
