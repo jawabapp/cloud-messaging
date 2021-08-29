@@ -38,9 +38,23 @@
                     </div>
                     <div class="card-body">
                         <jawab-notification-extra-info
-                            name="{{ old('extra_info.name', $notification->extra_info['name'] ?? null) }}"
-                            error-name="{{ $errors->first('extra_info.name') }}"
+                            @if (old('extra_info'))
+                            extra-info='@json(old('extra_info'))'
+                            @elseif($notification)
+                            extra-info='@json($notification->extra_info)'
+                            @endif
+                            error-extra-info='@json($errors->get('extra_info.*'))'
                         ></jawab-notification-extra-info>
+
+                        {{-- @if ($errors->has('extra_info.*'))
+                            <div class="alert alert-danger" role="alert">
+                                @foreach ($errors->get('extra_info.*') as $messages)
+                                    @foreach ($messages as $message)
+                                        <strong>{{ $message }}</strong>
+                                    @endforeach
+                                @endforeach
+                            </div>
+                        @endif --}}
                     </div>
                 </div>
 
@@ -76,7 +90,7 @@
                     </div>
                     <div class="card-body">
                         <jawab-scheduling-editor
-                            prop-schedule="{{ json_encode(old('schedule',$notification->schedule)) }}"
+                            prop-schedule="{{ json_encode(old('schedule',$notification ? $notification->schedule : null)) }}"
                         ></jawab-scheduling-editor>
                     </div>
                 </div>
