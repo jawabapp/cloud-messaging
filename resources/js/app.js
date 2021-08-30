@@ -3,6 +3,7 @@ import axios from "axios";
 import VueJsonPretty from "vue-json-pretty";
 
 import JawabNotificationComponent from "./components/JawabNotificationComponent";
+import JawabNotificationExtraInfo from "./components/JawabNotificationExtraInfo";
 import JawabSchedulingComponent from "./components/JawabSchedulingComponent";
 import JawabTargetComponent from "./components/JawabTargetComponent";
 
@@ -46,6 +47,7 @@ new Vue({
   el: "#cloud-messaging",
   components: {
     "jawab-notification-editor": JawabNotificationComponent,
+    "jawab-notification-extra-info": JawabNotificationExtraInfo,
     "jawab-scheduling-editor": JawabSchedulingComponent,
     "jawab-target-editor": JawabTargetComponent,
   },

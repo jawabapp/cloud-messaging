@@ -20,6 +20,7 @@
                     <tbody>
                     <tr>
                         <th scope="col">ID</th>
+                        <th scope="col">Name</th>
                         <th scope="col">Title</th>
                         <th scope="col">Text</th>
                         <th scope="col">Created at</th>
@@ -31,6 +32,7 @@
                     @foreach($data->items() as $item)
                     <tr>
                         <th scope="row">{{ $item->id }}</th>
+                        <td>{{ $item->extra_info['name'] ?? '-' }}</td>
                         <td>{{ $item->title ?? '-' }}</td>
                         <td><p class="m-0">{!! nl2br($item->text) !!}</p></td>
                         <td>{{ Timezone::convertToLocal($item->created_at) }}</td>
