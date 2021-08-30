@@ -22,9 +22,8 @@
                     </div>
                     <div class="card-body">
                         <jawab-notification-editor
-                            name="{{ old('name') }}"
-                            title="{{ old('title') }}"
-                            text="{{ old('text') }}"
+                            title="{{ old('title', $notification->title ?? null) }}"
+                            text="{{ old('text', $notification->text ?? null) }}"
                             error-image="{{ $errors->first('image') }}"
                             error-name="{{ $errors->first('extra_info.name') }}"
                             error-title="{{ $errors->first('title') }}"
@@ -39,8 +38,12 @@
                     </div>
                     <div class="card-body">
                         <jawab-notification-extra-info
-                            name="{{ old('extra_info.name') }}"
-                            error-name="{{ $errors->first('extra_info.name') }}"
+                            @if (old('extra_info'))
+                            extra-info='@json(old('extra_info'))'
+                            @elseif($notification)
+                            extra-info='@json($notification->extra_info)'
+                            @endif
+                            error-extra-info='@json($errors->get('extra_info.*'))'
                         ></jawab-notification-extra-info>
                     </div>
                 </div>
@@ -60,15 +63,11 @@
                             </div>
                         @endif
                         <div>
-                            <div class="form-group">
-                                <label for="phone" class="col-form-label text-md-right">Phone (optional)</label>
-                                <input id="phone" class="form-control" name="target[phone]" placeholder="Test Phone Number" />
-                            </div>
-                            <hr>
                             <jawab-target-editor
                                 target-audience-url="{{config('cloud-messaging.routes.target_audience')}}"
                                 filter-prefix-url="{{config('cloud-messaging.routes.filter_prefix')}}"
                                 :types="{{ json_encode(config('cloud-messaging.filter_types')) }}"
+                                :target-audience="{{ json_encode($notification->target ?? new stdClass) }}"
                                 >
                             </jawab-target-editor>
                         </div>
@@ -81,7 +80,7 @@
                     </div>
                     <div class="card-body">
                         <jawab-scheduling-editor
-                            prop-schedule="{{ json_encode(old('schedule')) }}"
+                            prop-schedule="{{ json_encode(old('schedule',$notification ? $notification->schedule : null)) }}"
                         ></jawab-scheduling-editor>
                     </div>
                 </div>

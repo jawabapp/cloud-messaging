@@ -6,7 +6,7 @@
           <span style="line-height: 37px;">APP</span>
         </div>
         <div class="col-md-6">
-          <select :name="`target[app][${app}][os]`" class="custom-select audience" v-model="os" :id="`audience-os-${app}`">
+          <select :name="`target[app][${appKey}][os]`" class="custom-select audience" v-model="os" :id="`audience-os-${app}`">
             <option value="ios">iOS</option>
             <option value="android">Android</option>
           </select>
@@ -18,7 +18,7 @@
       </div>
       <div v-for="(audience, index) in audiences" :key="index" class="row mt-2 pt-2 border-top">
         <div class="col-md-10">
-          <jawab-target-app-row :types="types" :filter-prefix-url="filterPrefixUrl" :app="app" :audience="audience" :appTypes="appTypes" @changeType="changeType"/>
+          <jawab-target-app-row :types="types" :filter-prefix-url="filterPrefixUrl" :audience-key="index" :app-key="appKey" :app="app" :audience="audience" :appTypes="appTypes" @changeType="changeType"/>
         </div>
         <div class="col-md-2 text-left">
           <a href="#" @click.prevent="and" class="btn btn-link" v-if="audience < types.length">and</a>
@@ -37,10 +37,14 @@ export default {
     'jawab-target-app-row' : JawabTargetAppRowComponent
   },
   props: {
-    app: {
-      type: Number,
-      required: true,
+    appKey:{
+      type:Number,
+      required:true,
       default: 1
+    },
+    app: {
+      type: Object,
+      required: true,
     },
     types:{
       type:Array,
@@ -52,6 +56,16 @@ export default {
       required:true
     }
   },
+  mounted(){
+    this.os = this.app[this.appKey].os || 'ios';
+
+    this.applyOsWatcher()
+
+    this.audiences = this.app[this.appKey].and ? Object.keys(this.app[this.appKey].and).map(
+      (key)=>(this.app[this.appKey].and[key])
+      ) : [];
+
+  },
   data() {
     return {
       os: 'ios',
@@ -59,17 +73,19 @@ export default {
       appTypes: {}
     }
   },
-  watch: {
-    os(newVal, oldVal) {
-      if(newVal !== oldVal) {
-        this.audiences = []
-        this.appTypes = {}
-      }
-    }
-  },
   methods: {
+    applyOsWatcher(){
+      this.$watch('os', function(newVal, oldVal) {
+        if(newVal !== oldVal) {
+          this.audiences = []
+          this.appTypes = {}
+        }
+      });
+    },
     and() {
-      this.audiences.push(this.audiences.length + 1)
+      this.audiences.push({
+        [this.audiences.length + 1]:{}
+      })
     },
     remove(audience) {
       this.appTypes[audience] = undefined

@@ -3,10 +3,12 @@
     <div class="col-md-8">
       <div class="card-body">
         <div class="form-group">
-          <label for="name" class="col-form-label text-md-right">{{ extraInfo.nameLabel }}</label>
-          <input id="name" type="text" class="form-control" :class="{ 'is-invalid' : errorName }" name="extra_info[name]" v-model="extraInfo.nameModel"/>
-          <jawab-character-counter :text="extraInfo.nameModel" :limit="140" ></jawab-character-counter>
-          <span v-if="errorName" class="invalid-feedback" role="alert"><strong>{{ errorName }}</strong></span>
+          <label for="name" class="col-form-label text-md-right">{{ info.nameLabel }}</label>
+          <input id="name" type="text" class="form-control" :class="{ 'is-invalid' : errors.name && errors.name.length }" name="extra_info[name]" v-model="info.nameModel"/>
+          <jawab-character-counter :text="info.nameModel" :limit="140" ></jawab-character-counter>
+          <template v-if="errorExtraInfo">
+            <span v-for="(error, index) in errors.name" :key="index" class="invalid-feedback" role="alert"><strong>{{ error }}</strong></span>
+          </template>
         </div>
       </div>
     </div>
@@ -21,12 +23,12 @@ export default {
     'jawab-character-counter': JawabCharacterCounterComponent
   },
   props: {
-    name:{
+    extraInfo:{
       type: String,
       required: false,
       default: ''
     },
-    errorName: {
+    errorExtraInfo: {
       type: String,
       required: false,
       default: ''
@@ -34,14 +36,31 @@ export default {
   },
   data() {
     return {
-      extraInfo:{
+      info:{
         nameLabel: 'Notification Name',
         nameModel: '',
+      },
+      errors:{
+        name:[]
       }
     }
   },
   created() {
-    this.extraInfo.nameModel = this.name;
+    if (this.extraInfo) {
+      let extraInfo = JSON.parse(this.extraInfo);
+      if (typeof extraInfo === 'object' && extraInfo !== null) {
+        this.info.nameModel = extraInfo.name;
+      }else{
+        this.info.nameModel = this.extraInfo.name;
+      }
+    }
+
+    if (this.errorExtraInfo) {
+      let errorExtraInfo = JSON.parse(this.errorExtraInfo);
+      if (typeof errorExtraInfo === 'object' && errorExtraInfo !== null) {
+        this.errors.name = errorExtraInfo['extra_info.name'];
+      }
+    }
   }
 }
 </script>
