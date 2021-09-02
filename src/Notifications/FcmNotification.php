@@ -80,8 +80,12 @@ class FcmNotification
             }
         }
 
+        if(!empty($payload['data']) && is_array($payload['data'])){
+            $rawMessage['data'] = $payload['data'];
+        }
+
         if ($asData) {
-            $rawMessage['data'] = ['payload' => json_encode($payload)];
+            $rawMessage['data']['payload'] = json_encode($payload);
         } else {
             $rawMessage['notification'] = $payload;
         }
