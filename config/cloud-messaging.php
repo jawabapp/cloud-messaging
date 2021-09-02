@@ -19,6 +19,7 @@ return [
         'campaign_prefix' => 'https://trends.jawab.app/',
         'campaign_parser_prefix' => "/{$path}/api/parse",
     ],
+    'image_mimetypes' => 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml',
     'filter_types' => [
         [
             'value' => 'countries',
