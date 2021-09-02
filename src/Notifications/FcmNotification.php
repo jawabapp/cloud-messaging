@@ -86,6 +86,10 @@ class FcmNotification
             $rawMessage['notification'] = $payload;
         }
 
+        if (isset($payload['notification_id'])) {
+            $rawMessage['data']['notification_id'] = $payload['notification_id'];
+        }
+
         return $rawMessage;
     }
 }

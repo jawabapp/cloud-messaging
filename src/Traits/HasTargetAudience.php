@@ -81,12 +81,6 @@ trait HasTargetAudience
                 }
             }
 
-            if ($ql) {
-                $qq->where(function ($q) use ($ql) {
-                    $q->whereRaw($ql);
-                });
-            }
-
             $joins = [];
             $joins['query'] = $query;
 
@@ -112,6 +106,12 @@ trait HasTargetAudience
                             }
                         }
                     }
+                });
+            }
+
+            if ($ql) {
+                $qq->where(function ($q) use ($ql) {
+                    $q->whereRaw($ql);
                 });
             }
         });
