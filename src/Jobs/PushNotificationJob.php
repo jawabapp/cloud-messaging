@@ -42,6 +42,7 @@ class PushNotificationJob implements ShouldQueue
     {
         $this->notification = $notification;
         $this->payload = $payload;
+        $this->payload['notification_id'] = $notification->id;
     }
 
     /**

@@ -17,14 +17,16 @@ class Notification extends Model
         'user_id',
         'response',
         'schedule',
-        'status'
+        'status',
+        'extra_info'
     ];
 
     protected $casts = [
         'target' => 'array',
         'campaign' => 'array',
         'response' => 'array',
-        'schedule' => 'array'
+        'schedule' => 'array',
+        'extra_info' => 'array'
     ];
 
     public function user()

@@ -23,18 +23,19 @@ class NotificationController extends Controller
         return view('cloud-messaging::notifications.index')->with('data', $notifications);
     }
 
-    public function compose(Request $request)
+    public function compose(Request $request, ?Notification $notification = null)
     {
-        return view('cloud-messaging::notifications.compose');
+        return view('cloud-messaging::notifications.compose', compact('notification'));
     }
 
     public function send(Request $request)
     {
 
         $this->validate($request, [
-            'title' => 'nullable|string|max:40',
-            'text' => 'required|string|max:90',
-            'image' => 'image|mimetypes:' . config('mimetypes.image') . '|max:300',
+            'extra_info.name' => 'required|string|max:140',
+            'title' => 'nullable|string|max:140',
+            'text' => 'required|string|max:240',
+            'image' => 'image|mimetypes:' . config('cloud-messaging.image_mimetypes') . '|max:300',
             'target' => 'required|array',
             'target.phone' => 'nullable|string',
         ]);
@@ -48,9 +49,9 @@ class NotificationController extends Controller
 
         if ($apps || $phone) {
             $notifiable_model = config('cloud-messaging.notifiable_model');
-            $users = $notifiable_model::getJawabTargetAudience($target);
+            $users_count = $notifiable_model::getJawabTargetAudience($target, true);
 
-            $campaign['tokens_count'] = $users->count();
+            $campaign['tokens_count'] = $users_count;
         }
 
         if (empty($campaign['tokens_count'])) {
@@ -85,6 +86,7 @@ class NotificationController extends Controller
 
             $notification = Notification::create([
                 'image'  => $imageUrl,
+                'extra_info'  => $request->get('extra_info'),
                 'title'  => $request->get('title'),
                 'text'   => $request->get('text'),
                 'target' => $request->get('target'),
