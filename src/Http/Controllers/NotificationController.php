@@ -35,7 +35,7 @@ class NotificationController extends Controller
             'extra_info.name' => 'required|string|max:140',
             'title' => 'nullable|string|max:140',
             'text' => 'required|string|max:240',
-            'image' => 'image|mimetypes:' . config('mimetypes.image') . '|max:300',
+            'image' => 'image|mimetypes:' . config('cloud-messaging.image_mimetypes') . '|max:300',
             'target' => 'required|array',
             'target.phone' => 'nullable|string',
         ]);
@@ -49,9 +49,9 @@ class NotificationController extends Controller
 
         if ($apps || $phone) {
             $notifiable_model = config('cloud-messaging.notifiable_model');
-            $users = $notifiable_model::getJawabTargetAudience($target);
+            $users_count = $notifiable_model::getJawabTargetAudience($target, true);
 
-            $campaign['tokens_count'] = $users->count();
+            $campaign['tokens_count'] = $users_count;
         }
 
         if (empty($campaign['tokens_count'])) {
