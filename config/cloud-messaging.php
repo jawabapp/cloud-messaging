@@ -13,6 +13,7 @@ return [
     ],
     'user_model' => \App\Models\User::class,
     'notifiable_model' => \App\Models\User::class,
+    'country_code_column' => null,
     'routes' => [
         'target_audience' => "/{$path}/api/target-audience",
         'filter_prefix' => "/{$path}/api",

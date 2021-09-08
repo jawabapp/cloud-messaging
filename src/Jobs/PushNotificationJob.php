@@ -2,9 +2,9 @@
 
 namespace JawabApp\CloudMessaging\Jobs;
 
-use Log;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,8 +15,10 @@ use JawabApp\CloudMessaging\Notifications\FcmNotification;
 class PushNotificationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     private $notification;
     private $payload;
+    private $notifiable_model;
 
     /**
      * The number of times the job may be attempted.
@@ -42,6 +44,7 @@ class PushNotificationJob implements ShouldQueue
     {
         $this->notification = $notification;
         $this->payload = $payload;
+        $this->notifiable_model = config('cloud-messaging.notifiable_model');
         $this->payload['notification_id'] = $notification->id;
     }
 
@@ -52,21 +55,71 @@ class PushNotificationJob implements ShouldQueue
      */
     public function handle()
     {
+        Log::info("send notification start");
 
-        try {
+        if (empty($this->notification)) {
+            return;
+        }
 
-            Log::info("send notification start");
+        $schedule = $this->notification->schedule;
+        Log::info(config('cloud-messaging.country_code_column'), $schedule);
 
-            if (empty($this->notification)) {
-                return;
+        switch ($schedule['type'] ?? 'Now') {
+            case 'Scheduled':
+                $this->publishToScheduledDate($schedule['date'] ?? null);
+                break;
+            case 'Now':
+            default:
+                $this->publishNow();
+                break;
+        }
+    }
+
+    protected function publishToScheduledDate($scheduledDate = null)
+    {
+        if (config('cloud-messaging.country_code_column')) {
+            $country_users = $this->notifiable_model::getJawabTargetAudience($this->notification->target)
+                ->groupBy([
+                    config('cloud-messaging.country_code_column')
+                ]);
+
+            $countries = collect(config('cloud-messaging-countries'));
+
+            foreach ($country_users as $country_code => $users) {
+                $country = $countries->where('country_code', strtoupper($country_code))->first();
+                $scheduledCountryDateTime = Carbon::parse($scheduledDate, $country->timezones[0] ?? null);
+                $this->publishScheduledJob($scheduledCountryDateTime, $country_code);
             }
+        } else {
+            $this->publishScheduledJob($scheduledDate);
+        }
+    }
 
+    protected function publishScheduledJob($scheduledDate, $country_code = null)
+    {
+
+        $jobId = app(\Illuminate\Contracts\Bus\Dispatcher::class)->dispatch(
+            (new PushNotificationScheduledJob($this->notification, $this->payload, $country_code))
+                ->onQueue('cloud-message:' . $this->notification->id . ':' . $country_code)
+                ->delay(now()->diff(Carbon::parse($scheduledDate)))
+        );
+
+        $schedule = $this->notification->schedule;
+        $schedule['job_ids'][] = $jobId;
+
+        $this->notification->update([
+            'schedule' => $schedule
+        ]);
+    }
+
+    protected function publishNow()
+    {
+        try {
             $this->notification->update([
                 'status' => 'processing'
             ]);
 
-            $notifiable_model = config('cloud-messaging.notifiable_model');
-            $users = $notifiable_model::getJawabTargetAudience($this->notification->target);
+            $users = $this->notifiable_model::getJawabTargetAudience($this->notification->target);
 
             $response = collect();
 

@@ -3,15 +3,13 @@
 namespace JawabApp\CloudMessaging\Http\Controllers;
 
 use Carbon\Carbon;
-use App\Models\Tag;
-use App\Models\Post;
-use App\Models\Account;
-use App\Models\Mongo\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Redis;
 use Google\Cloud\BigQuery\BigQueryClient;
+use Illuminate\Validation\ValidationException;
 use JawabApp\CloudMessaging\Models\Notification;
 use JawabApp\CloudMessaging\Jobs\PushNotificationJob;
 
@@ -40,7 +38,6 @@ class NotificationController extends Controller
             'target.phone' => 'nullable|string',
         ]);
 
-        $schedule = $request->get('schedule');
         $target = $request->get('target');
 
         $campaign = [];
@@ -96,23 +93,7 @@ class NotificationController extends Controller
                 'user_id'  => auth()->id()
             ]);
 
-            switch ($schedule['type'] ?? 'Now') {
-                case 'Now':
-                    PushNotificationJob::dispatch($notification, $payload);
-                    break;
-                case 'Scheduled':
-                    $scheduledDate = $schedule['date'] ?? null;
-
-                    $jobId = $this->dispatch((new PushNotificationJob($notification, $payload))->delay(now()->diff(Carbon::parse($scheduledDate))));
-
-                    $schedule = $request->get('schedule');
-                    $schedule['job_id'] = $jobId;
-
-                    $notification->update([
-                        'schedule' => $schedule
-                    ]);
-                    break;
-            }
+            PushNotificationJob::dispatch($notification, $payload)->onQueue('cloud-message:' . $notification->id);
         }
 
         return redirect(route('jawab.notifications.index'));
@@ -129,16 +110,24 @@ class NotificationController extends Controller
 
     public function delete(Notification $notification)
     {
-        if ($notification->schedule['job_id'] ?? false) {
-            $job = DB::table('jobs')->where('id', $notification->schedule['job_id'])->first();
-            if ($job) {
-                DB::table('jobs')->delete($job->id);
+        switch (env('QUEUE_DRIVER')) {
+            case 'redis':
+                Redis::del(
+                    Queue::getRedis()
+                        ->keys("queues:cloud-message:{$notification->id}:*")
+                );
+                break;
 
-                $notification->update([
-                    'status' => 'deleted'
-                ]);
-            }
+            case 'database':
+                if ($notification->schedule['job_ids'] ?? false) {
+                    DB::table('jobs')->whereIn('id', $notification->schedule['job_ids'])->delete();
+                }
+                break;
         }
+
+        $notification->update([
+            'status' => 'deleted'
+        ]);
 
         return redirect(route('jawab.notifications.index'));
     }
