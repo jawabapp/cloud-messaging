@@ -44,8 +44,8 @@ class PushNotificationJob implements ShouldQueue
     {
         $this->notification = $notification;
         $this->payload = $payload;
-        $this->notifiable_model = config('cloud-messaging.notifiable_model');
         $this->payload['notification_id'] = $notification->id;
+        $this->notifiable_model = config('cloud-messaging.notifiable_model');
     }
 
     /**
@@ -55,14 +55,13 @@ class PushNotificationJob implements ShouldQueue
      */
     public function handle()
     {
-        Log::info("send notification start");
+        Log::info("[PushNotificationJob] send notification start");
 
         if (empty($this->notification)) {
             return;
         }
 
         $schedule = $this->notification->schedule;
-        Log::info(config('cloud-messaging.country_code_column'), $schedule);
 
         switch ($schedule['type'] ?? 'Now') {
             case 'Scheduled':
@@ -129,7 +128,7 @@ class PushNotificationJob implements ShouldQueue
                 try {
                     $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
                 } catch (\Exception $exception) {
-                    Log::error("send-notification " . $exception->getMessage());
+                    Log::error("[PushNotificationJob] send-notification " . $exception->getMessage());
                 }
             });
 
@@ -138,7 +137,7 @@ class PushNotificationJob implements ShouldQueue
                 'status' => 'completed'
             ]);
 
-            Log::info("send notification end");
+            Log::info("[PushNotificationJob] send notification end");
         } catch (\Exception $exception) {
             \Log::info('Error: [PushNotificationJob] File: ' . $exception->getFile() . ' Line: ' . $exception->getLine() . ' Message: ' . $exception->getMessage());
         }
