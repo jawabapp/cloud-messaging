@@ -78,8 +78,7 @@ class PushNotificationJob implements ShouldQueue
     protected function publishToScheduledDate($scheduledDate = null)
     {
         if (config('cloud-messaging.country_code_column')) {
-            $country_users = $this->notifiable_model::getJawabTargetAudience($this->notification->target, false, true)
-                ->get()
+            $country_users = $this->notifiable_model::getJawabTargetAudience($this->notification->target)
                 ->groupBy([
                     config('cloud-messaging.country_code_column')
                 ]);
