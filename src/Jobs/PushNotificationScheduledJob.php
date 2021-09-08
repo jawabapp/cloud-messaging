@@ -59,6 +59,9 @@ class PushNotificationScheduledJob implements ShouldQueue
     public function handle()
     {
         try {
+
+            Log::info("[PushNotificationScheduledJob] send notification start country_code:" . ($this->country_code ?? 'N/A'));
+
             $this->notification->update([
                 'status' => 'processing'
             ]);
@@ -79,7 +82,7 @@ class PushNotificationScheduledJob implements ShouldQueue
                 try {
                     $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
                 } catch (\Exception $exception) {
-                    Log::error("send-notification " . $exception->getMessage());
+                    Log::error("[PushNotificationScheduledJob] send-notification " . $exception->getMessage());
                 }
             });
 
@@ -88,7 +91,7 @@ class PushNotificationScheduledJob implements ShouldQueue
                 'status' => 'completed'
             ]);
 
-            Log::info("send notification end");
+            Log::info("[PushNotificationScheduledJob] send notification end");
         } catch (\Exception $exception) {
             \Log::info('Error: [PushNotificationScheduledJob] File: ' . $exception->getFile() . ' Line: ' . $exception->getLine() . ' Message: ' . $exception->getMessage());
         }
