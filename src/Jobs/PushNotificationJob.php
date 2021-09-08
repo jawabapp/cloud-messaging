@@ -65,16 +65,17 @@ class PushNotificationJob implements ShouldQueue
         Log::info(config('cloud-messaging.country_code_column'), $schedule);
 
         switch ($schedule['type'] ?? 'Now') {
-            case 'Now':
-                $this->sendNow();
-                break;
             case 'Scheduled':
-                $this->sendToScheduledDate($schedule['date'] ?? null);
+                $this->publishToScheduledDate($schedule['date'] ?? null);
+                break;
+            case 'Now':
+            default:
+                $this->publishNow();
                 break;
         }
     }
 
-    protected function sendToScheduledDate($scheduledDate = null)
+    protected function publishToScheduledDate($scheduledDate = null)
     {
         if (config('cloud-messaging.country_code_column')) {
             $country_users = $this->notifiable_model::getJawabTargetAudience($this->notification->target, false, true)
@@ -112,7 +113,7 @@ class PushNotificationJob implements ShouldQueue
         ]);
     }
 
-    protected function sendNow()
+    protected function publishNow()
     {
         try {
             $this->notification->update([
