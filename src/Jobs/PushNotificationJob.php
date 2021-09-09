@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use JawabApp\CloudMessaging\Models\Notification;
 use JawabApp\CloudMessaging\Notifications\FcmNotification;
+use JawabApp\CloudMessaging\Traits\HasCloudMessagingQueue;
 
 class PushNotificationJob implements ShouldQueue
 {
@@ -99,7 +100,7 @@ class PushNotificationJob implements ShouldQueue
 
         $jobId = app(\Illuminate\Contracts\Bus\Dispatcher::class)->dispatch(
             (new PushNotificationScheduledJob($this->notification, $this->payload, $country_code))
-                ->onQueue('cloud-message:' . $this->notification->id . ':' . $country_code)
+                ->onQueue('cloud-message')
                 ->delay(now()->diff(Carbon::parse($scheduledDate)))
         );
 
