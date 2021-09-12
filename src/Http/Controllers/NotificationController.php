@@ -129,9 +129,9 @@ class NotificationController extends Controller
                         Redis::del(Redis::keys('queues:cloud-message:delayed'));
                     } else {
                         Redis::del(Redis::keys('queues:cloud-message:delayed'));
-                        Redis::setex(
+                        Redis::set(
                             "queues:cloud-message:delayed",
-                            $new_jobs
+                            json_encode($new_jobs)
                         );
                     }
                 }
