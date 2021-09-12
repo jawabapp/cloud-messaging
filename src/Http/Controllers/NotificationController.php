@@ -15,6 +15,7 @@ use JawabApp\CloudMessaging\Jobs\PushNotificationJob;
 
 class NotificationController extends Controller
 {
+
     public function index(Request $request)
     {
         $notifications = Notification::with('user')->latest()->paginate(10);
@@ -93,7 +94,8 @@ class NotificationController extends Controller
                 'user_id'  => auth()->id()
             ]);
 
-            PushNotificationJob::dispatch($notification, $payload)->onQueue('cloud-message:' . $notification->id);
+            PushNotificationJob::dispatch($notification, $payload)
+                ->onQueue('cloud-message');
         }
 
         return redirect(route('jawab.notifications.index'));
@@ -112,10 +114,17 @@ class NotificationController extends Controller
     {
         switch (env('QUEUE_DRIVER')) {
             case 'redis':
-                Redis::del(
-                    Queue::getRedis()
-                        ->keys("queues:cloud-message:{$notification->id}:*")
-                );
+                $jobs = Redis::zrange("queues:cloud-message:*", 0, -1);
+                foreach ($jobs as $job) {
+                    $job_data = json_decode($job, true);
+
+                    $notification_job_ids = $notification->schedule['job_ids'] ?? [];
+                    $job_id = $job_data['id'] ?? null;
+
+                    if ($notification_job_ids && in_array($job_id, $notification_job_ids)) {
+                        $job->delete();
+                    }
+                }
                 break;
 
             case 'database':
