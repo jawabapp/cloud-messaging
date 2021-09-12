@@ -144,7 +144,8 @@ If you discover any security related issues, please email trmdy@hotmail.com inst
 
 ## Credits
 
-- [Ahmed Magdy](https://github.com/jawab)
+- [Ahmed Magdy](https://github.com/ahmed-magdy-hassan)
+- [Ibraheem Qanah](https://github.com/Qanah)
 - [All Contributors](../../contributors)
 
 ## License
