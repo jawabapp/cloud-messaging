@@ -58,13 +58,13 @@ class NotificationController extends Controller
             ]);
         }
 
-        if (app()->environment() !== 'production') {
-            if ($campaign['tokens_count'] > 5) {
-                throw ValidationException::withMessages([
-                    'target.app' => [trans('Only production can send to more than 5 user')],
-                ]);
-            }
-        }
+        // if (app()->environment() !== 'production') {
+        //     if ($campaign['tokens_count'] > 5) {
+        //         throw ValidationException::withMessages([
+        //             'target.app' => [trans('Only production can send to more than 5 user')],
+        //         ]);
+        //     }
+        // }
 
         if ($campaign['tokens_count']) {
 
@@ -129,9 +129,9 @@ class NotificationController extends Controller
                         Redis::del(Redis::keys('queues:cloud-message:delayed'));
                     } else {
                         Redis::del(Redis::keys('queues:cloud-message:delayed'));
-                        Redis::set(
+                        Redis::rpush(
                             "queues:cloud-message:delayed",
-                            json_encode($new_jobs)
+                            $new_jobs
                         );
                     }
                 }
