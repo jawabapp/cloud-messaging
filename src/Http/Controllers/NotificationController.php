@@ -3,6 +3,7 @@
 namespace JawabApp\CloudMessaging\Http\Controllers;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
@@ -58,13 +59,13 @@ class NotificationController extends Controller
             ]);
         }
 
-        if (app()->environment() !== 'production') {
-            if ($campaign['tokens_count'] > 5) {
-                throw ValidationException::withMessages([
-                    'target.app' => [trans('Only production can send to more than 5 user')],
-                ]);
-            }
-        }
+        // if (app()->environment() !== 'production') {
+        //     if ($campaign['tokens_count'] > 5) {
+        //         throw ValidationException::withMessages([
+        //             'target.app' => [trans('Only production can send to more than 5 user')],
+        //         ]);
+        //     }
+        // }
 
         if ($campaign['tokens_count']) {
 
@@ -114,28 +115,8 @@ class NotificationController extends Controller
     {
         switch (env('QUEUE_DRIVER')) {
             case 'redis':
-                $jobs = Redis::zrange("queues:cloud-message:delayed", 0, -1);
-
-                $notification_job_ids = $notification->schedule['job_ids'] ?? [];
-
-                $new_jobs = array_filter($jobs, function ($job) use ($notification_job_ids) {
-                    $job_data = json_decode($job, true);
-                    $job_id = $job_data['id'] ?? null;
-                    return !in_array($job_id, $notification_job_ids);
-                });
-
-                if (count($jobs)) {
-                    if (count($new_jobs) == 0) {
-                        Redis::del(Redis::keys('queues:cloud-message:delayed'));
-                    } else {
-                        Redis::del(Redis::keys('queues:cloud-message:delayed'));
-                        Redis::set(
-                            "queues:cloud-message:delayed",
-                            json_encode($new_jobs)
-                        );
-                    }
-                }
-
+                $key = "queues:cloud-message:delayed";
+                $this->deleteRedisJobs($key, $notification);
                 break;
 
             case 'database':
@@ -150,6 +131,27 @@ class NotificationController extends Controller
         ]);
 
         return redirect(route('jawab.notifications.index'));
+    }
+
+    protected function deleteRedisJobs($key, Notification $notification)
+    {
+        $jobs = Redis::zrange($key, 0, -1);
+
+        $notification_job_ids = $notification->schedule['job_ids'] ?? [];
+
+        $notification_jobs = array_filter($jobs, function ($job) use ($notification_job_ids) {
+            $job_data = json_decode($job, true);
+            $job_id = $job_data['id'] ?? null;
+            return in_array($job_id, $notification_job_ids);
+        });
+
+        // dd($jobs, $notification_jobs);
+
+        if (count($notification_jobs)) {
+            foreach ($notification_jobs as $index => $notification_job) {
+                Redis::zrem($key, $notification_job);
+            }
+        }
     }
 
     public function reportRefresh()
