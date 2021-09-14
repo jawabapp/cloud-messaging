@@ -86,8 +86,9 @@ class PushNotificationScheduledJob implements ShouldQueue
                 }
             });
 
+            $notification_response = array_merge($this->notification->response ?? [], $response->all() ?? []);
             $this->notification->update([
-                'response' => $response->all(),
+                'response' => $notification_response,
                 'status' => 'completed'
             ]);
 

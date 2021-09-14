@@ -115,8 +115,7 @@ class NotificationController extends Controller
     {
         switch (env('QUEUE_DRIVER')) {
             case 'redis':
-                $key = "queues:cloud-message:delayed";
-                $this->deleteRedisJobs($key, $notification);
+                $this->deleteRedisJobs($notification);
                 break;
 
             case 'database':
@@ -133,8 +132,10 @@ class NotificationController extends Controller
         return redirect(route('jawab.notifications.index'));
     }
 
-    protected function deleteRedisJobs($key, Notification $notification)
+    protected function deleteRedisJobs(Notification $notification)
     {
+        $key = "queues:cloud-message:delayed";
+
         $jobs = Redis::zrange($key, 0, -1);
 
         $notification_job_ids = $notification->schedule['job_ids'] ?? [];
