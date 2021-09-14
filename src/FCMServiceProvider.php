@@ -22,6 +22,10 @@ class FCMServiceProvider extends ServiceProvider
         ], 'cloud-messaging-config');
 
         $this->publishes([
+            __DIR__ . '/../config/cloud-messaging-countries.php' => config_path('cloud-messaging-countries.php'),
+        ], 'cloud-messaging-countries-config');
+
+        $this->publishes([
             __DIR__ . '/../public' => public_path('vendor/cloud-messaging'),
         ], 'cloud-messaging-assets');
 
