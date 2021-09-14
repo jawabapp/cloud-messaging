@@ -34,6 +34,11 @@ class PublishCommand extends Command
         ]);
 
         $this->call('vendor:publish', [
+            '--tag' => 'cloud-messaging-countries-config',
+            '--force' => true,
+        ]);
+
+        $this->call('vendor:publish', [
             '--tag' => 'cloud-messaging-assets',
             '--force' => true,
         ]);

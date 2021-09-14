@@ -88,10 +88,9 @@ class PushNotificationJob implements ShouldQueue
             foreach ($country_users as $country_code => $users) {
                 $country = $countries->where('country_code', strtoupper($country_code))->first();
 
-                $countryTimeZone = $country->timezones[0] ?? null;
+                $countryTimeZone = $country['timezones'][0] ?? null;
 
-                $scheduledCountryDateTime = Carbon::parse($scheduledDate, $countryTimeZone);
-                $this->publishScheduledJob($scheduledCountryDateTime, $country_code, $countryTimeZone);
+                $this->publishScheduledJob($scheduledDate, $country_code, $countryTimeZone);
             }
         } else {
             $this->publishScheduledJob($scheduledDate);
@@ -100,11 +99,13 @@ class PushNotificationJob implements ShouldQueue
 
     protected function publishScheduledJob($scheduledDate, $country_code = null, $countryTimeZone = null)
     {
+        $date_time = Carbon::parse($scheduledDate);
+
         $jobId = app(\Illuminate\Contracts\Bus\Dispatcher::class)->dispatch(
             (new PushNotificationScheduledJob($this->notification, $this->payload, $country_code))
                 ->onQueue('cloud-message')
                 ->delay(
-                    now($countryTimeZone)->diff(Carbon::parse($scheduledDate))
+                    now($countryTimeZone)->diff(Carbon::parse($date_time, $countryTimeZone))
                 )
         );
 
