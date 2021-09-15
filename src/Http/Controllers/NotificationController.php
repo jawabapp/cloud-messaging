@@ -30,7 +30,6 @@ class NotificationController extends Controller
 
     public function send(Request $request)
     {
-
         $this->validate($request, [
             'extra_info.name' => 'required|string|max:140',
             'title' => 'nullable|string|max:140',
@@ -59,13 +58,13 @@ class NotificationController extends Controller
             ]);
         }
 
-        // if (app()->environment() !== 'production') {
-        //     if ($campaign['tokens_count'] > 5) {
-        //         throw ValidationException::withMessages([
-        //             'target.app' => [trans('Only production can send to more than 5 user')],
-        //         ]);
-        //     }
-        // }
+        if (app()->environment() !== 'production') {
+            if ($campaign['tokens_count'] > 5) {
+                throw ValidationException::withMessages([
+                    'target.app' => [trans('Only production can send to more than 5 user')],
+                ]);
+            }
+        }
 
         if ($campaign['tokens_count']) {
 

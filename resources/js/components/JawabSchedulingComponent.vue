@@ -5,8 +5,9 @@
       <input id="schedule" class="form-control" type="text" name="schedule[type]" v-model="schedule.type" @click="scheduling = !scheduling" />
     </div>
     <div v-if="schedule.type === 'Scheduled'">
-      <ejs-datetimepicker :placeholder="waterMark" v-model="schedule.date" :min="new Date()" :format="'dd/MM/yyyy HH:mm'" :timeFormat="'HH:mm'" ></ejs-datetimepicker>
-      <input type="hidden" name="schedule[date]" v-model="schedule.date.toISOString()" />
+      <ejs-datetimepicker :placeholder="waterMark" v-model="schedule.date" :min="new Date(now)" :format="'dd/MM/yyyy HH:mm'" :timeFormat="'HH:mm'" ></ejs-datetimepicker>
+      <input type="hidden" name="schedule[date]" :value="schedule.date.toLocaleString()" />
+      <p><em><mark>This time based on UTC.</mark></em></p>
     </div>
     <div v-if="scheduling">
       <ul class="list-group">
@@ -26,13 +27,14 @@ export default {
   name:'JawabSchedulingComponent',
   props: {
     propSchedule: String,
+    now: String,
   },
   data() {
     return {
       scheduling: false,
       schedule: {
         type: this.oldVal("type","Now"),
-        date: new Date(this.oldVal("date", (new Date()).toISOString())),
+        date: new Date(this.oldVal("date", this.now)),
       },
       waterMark: 'Select a datetime',
     }
