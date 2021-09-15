@@ -3,8 +3,8 @@
 namespace JawabApp\CloudMessaging\Jobs;
 
 use Log;
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -87,31 +87,57 @@ class PushNotificationScheduledJob implements ShouldQueue
                 }
             });
 
-            $notification_response = array_merge($this->notification->response ?? [], $response->all() ?? []);
+            $this->notification->update([
+                'response' => array_merge($this->notification->response ?? [], $response->all() ?? []),
+            ]);
 
-            $jobs = Redis::zrange("queues:cloud-message:delayed", 0, -1);
             $notification_job_ids = $this->notification->schedule['job_ids'] ?? [];
 
-            $notification_jobs = array_filter($jobs, function ($job) use ($notification_job_ids) {
-                $job_data = json_decode($job, true);
-                $job_id = $job_data['id'] ?? null;
-                return in_array($job_id, $notification_job_ids);
-            });
+            switch (env('QUEUE_DRIVER')) {
+                case 'redis':
+                    $this->checkRedisJobs($notification_job_ids);
+                    break;
 
-            if (count($notification_jobs)) {
-                $this->notification->update([
-                    'response' => $notification_response,
-                ]);
-            } else {
-                $this->notification->update([
-                    'response' => $notification_response,
-                    'status' => 'completed'
-                ]);
+                case 'database':
+                    if ($notification_job_ids) {
+                        $this->checkDBJobs($notification_job_ids);
+                    }
+                    break;
             }
 
             Log::info("[PushNotificationScheduledJob] send notification end");
         } catch (\Exception $exception) {
-            \Log::info('Error: [PushNotificationScheduledJob] File: ' . $exception->getFile() . ' Line: ' . $exception->getLine() . ' Message: ' . $exception->getMessage());
+            Log::info('Error: [PushNotificationScheduledJob] File: ' . $exception->getFile() . ' Line: ' . $exception->getLine() . ' Message: ' . $exception->getMessage());
         }
+    }
+
+    protected function checkRedisJobs($notification_job_ids)
+    {
+        $jobs = Redis::zrange("queues:cloud-message:delayed", 0, -1);
+        $notification_jobs = array_filter($jobs, function ($job) use ($notification_job_ids) {
+            $job_data = json_decode($job, true);
+            $job_id = $job_data['id'] ?? null;
+            return in_array($job_id, $notification_job_ids);
+        });
+
+        if (!$notification_jobs) {
+            $this->markNotificationAsCompleted();
+        }
+    }
+
+    protected function checkDBJobs($notification_job_ids)
+    {
+        $jobs_count = DB::table('jobs')->whereIn('id', $notification_job_ids)->count();
+        if (!$jobs_count) {
+            $this->markNotificationAsCompleted();
+        }
+    }
+
+    protected function markNotificationAsCompleted()
+    {
+        $this->notification
+            ->update([
+                'status' => 'completed'
+            ]);
     }
 }
