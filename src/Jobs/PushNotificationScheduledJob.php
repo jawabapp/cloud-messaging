@@ -5,6 +5,7 @@ namespace JawabApp\CloudMessaging\Jobs;
 use Log;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -87,10 +88,26 @@ class PushNotificationScheduledJob implements ShouldQueue
             });
 
             $notification_response = array_merge($this->notification->response ?? [], $response->all() ?? []);
-            $this->notification->update([
-                'response' => $notification_response,
-                'status' => 'completed'
-            ]);
+
+            $jobs = Redis::zrange("queues:cloud-message:delayed", 0, -1);
+            $notification_job_ids = $this->notification->schedule['job_ids'] ?? [];
+
+            $notification_jobs = array_filter($jobs, function ($job) use ($notification_job_ids) {
+                $job_data = json_decode($job, true);
+                $job_id = $job_data['id'] ?? null;
+                return in_array($job_id, $notification_job_ids);
+            });
+
+            if (count($notification_jobs)) {
+                $this->notification->update([
+                    'response' => $notification_response,
+                ]);
+            } else {
+                $this->notification->update([
+                    'response' => $notification_response,
+                    'status' => 'completed'
+                ]);
+            }
 
             Log::info("[PushNotificationScheduledJob] send notification end");
         } catch (\Exception $exception) {

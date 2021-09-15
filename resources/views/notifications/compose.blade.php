@@ -81,6 +81,7 @@
                     <div class="card-body">
                         <jawab-scheduling-editor
                             prop-schedule="{{ json_encode(old('schedule',$notification ? $notification->schedule : null)) }}"
+                            now="{{ now()->format('Y-m-d H:i:s') }}"
                         ></jawab-scheduling-editor>
                     </div>
                 </div>
