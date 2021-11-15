@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Http\Controllers;
+namespace Jawabapp\CloudMessaging\Http\Controllers;
 
 use Carbon\Carbon;
 use Exception;
@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Google\Cloud\BigQuery\BigQueryClient;
 use Illuminate\Validation\ValidationException;
-use JawabApp\CloudMessaging\Models\Notification;
-use JawabApp\CloudMessaging\Jobs\PushNotificationJob;
+use Jawabapp\CloudMessaging\Models\Notification;
+use Jawabapp\CloudMessaging\Jobs\PushNotificationJob;
 
 class NotificationController extends Controller
 {

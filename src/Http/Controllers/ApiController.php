@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Http\Controllers;
+namespace Jawabapp\CloudMessaging\Http\Controllers;
 
 use Illuminate\Http\Request;
 

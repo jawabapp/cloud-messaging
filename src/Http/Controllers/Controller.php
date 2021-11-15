@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Http\Controllers;
+namespace Jawabapp\CloudMessaging\Http\Controllers;
 
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Bus\DispatchesJobs;

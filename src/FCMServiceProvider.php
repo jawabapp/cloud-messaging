@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging;
+namespace Jawabapp\CloudMessaging;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -57,7 +57,7 @@ class FCMServiceProvider extends ServiceProvider
     private function routeConfiguration()
     {
         return [
-            'namespace' => 'JawabApp\CloudMessaging\Http\Controllers',
+            'namespace' => 'Jawabapp\CloudMessaging\Http\Controllers',
             'prefix' => config('cloud-messaging.path'),
             'middleware' => config('cloud-messaging.middleware'),
         ];
