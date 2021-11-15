@@ -13,9 +13,9 @@ composer require jawabapp/cloud-messaging
 ###### User.php Model
 
 ```php
-use JawabApp\CloudMessaging\Contracts\TargetAudience;
-use JawabApp\CloudMessaging\Traits\EloquentGetTableNameTrait;
-use JawabApp\CloudMessaging\Traits\HasTargetAudience;
+use Jawabapp\CloudMessaging\Contracts\TargetAudience;
+use Jawabapp\CloudMessaging\Traits\EloquentGetTableNameTrait;
+use Jawabapp\CloudMessaging\Traits\HasTargetAudience;
 
 class User extends Authenticatable implements TargetAudience
 {

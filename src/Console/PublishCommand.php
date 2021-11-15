@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Console;
+namespace Jawabapp\CloudMessaging\Console;
 
 
 use Illuminate\Console\Command;
@@ -19,7 +19,7 @@ class PublishCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Publish all of the JawabApp-CloudMessaging resources';
+    protected $description = 'Publish all of the Jawabapp-CloudMessaging resources';
 
     /**
      * Execute the console command.

@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Notifications;
+namespace Jawabapp\CloudMessaging\Notifications;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -80,7 +80,7 @@ class FcmNotification
             }
         }
 
-        if(!empty($payload['data']) && is_array($payload['data'])){
+        if (!empty($payload['data']) && is_array($payload['data'])) {
             $rawMessage['data'] = $payload['data'];
         }
 
