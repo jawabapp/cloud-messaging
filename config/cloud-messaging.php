@@ -10,6 +10,7 @@ return [
     'big_query' => [
         'key_file_path' => env('GOOGLE_APPLICATION_CREDENTIALS'),
         'project_id' => env('BIG_QUERY_PROJECT_ID', 1883),
+        'table_name' => '',
     ],
     'user_model' => \App\Models\User::class,
     'notifiable_model' => \App\Models\User::class,

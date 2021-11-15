@@ -299,7 +299,7 @@ class NotificationController extends Controller
 
             $yesterday = now()->format('Y*');
 
-            $table_name = "analytics_186434363.events_{$yesterday}";
+            $table_name = config('cloud-messaging.big_query.table_name') . ".events_{$yesterday}";
 
             $query = str_replace(
                 ['{DATA_TABLE}'],
