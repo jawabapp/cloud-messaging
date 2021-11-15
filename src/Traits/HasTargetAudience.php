@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Traits;
+namespace Jawabapp\CloudMessaging\Traits;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;

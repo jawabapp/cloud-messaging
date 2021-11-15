@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Contracts;
+namespace Jawabapp\CloudMessaging\Contracts;
 
 use Illuminate\Database\Eloquent\Builder;
 

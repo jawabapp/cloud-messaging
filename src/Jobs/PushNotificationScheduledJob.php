@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Jobs;
+namespace Jawabapp\CloudMessaging\Jobs;
 
 use Log;
 use Illuminate\Bus\Queueable;
@@ -10,8 +10,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use JawabApp\CloudMessaging\Models\Notification;
-use JawabApp\CloudMessaging\Notifications\FcmNotification;
+use Jawabapp\CloudMessaging\Models\Notification;
+use Jawabapp\CloudMessaging\Notifications\FcmNotification;
 
 class PushNotificationScheduledJob implements ShouldQueue
 {

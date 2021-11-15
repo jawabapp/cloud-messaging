@@ -1,6 +1,6 @@
 <?php
 
-namespace JawabApp\CloudMessaging\Models;
+namespace Jawabapp\CloudMessaging\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
