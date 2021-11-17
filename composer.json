@@ -1,5 +1,5 @@
 {
-    "name": "Jawabapp/cloud-messaging",
+    "name": "jawabapp/cloud-messaging",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -12,10 +12,7 @@
     "autoload": {
         "psr-4": {
             "Jawabapp\\CloudMessaging\\": "src/"
-        },
-        "files": [
-            "src/helpers.php"
-        ]
+        }
     },
     "extra": {
         "laravel": {
@@ -26,6 +23,7 @@
     },
     "require": {
         "guzzlehttp/guzzle": "^6.3",
-        "nesbot/carbon": "^1.39.1"
+        "nesbot/carbon": "^1.39.1",
+        "google/cloud-bigquery": "^1.12"
     }
 }

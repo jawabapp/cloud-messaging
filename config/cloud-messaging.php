@@ -9,9 +9,10 @@ return [
     'path' => $path,
     'big_query' => [
         'key_file_path' => env('GOOGLE_APPLICATION_CREDENTIALS'),
-        'project_id' => env('BIG_QUERY_PROJECT_ID', 1883),
-        'table_name' => '',
+        'project_id' => env('BIG_QUERY_PROJECT_ID'),
+        'table_name' => env('BIG_QUERY_TABLE_NAME'),
     ],
+    'notification_open_event_name' => env('NOTIFICATION_OPEN_EVENT_NAME'),
     'user_model' => \App\Models\User::class,
     'notifiable_model' => \App\Models\User::class,
     'country_code_column' => null,
@@ -55,5 +56,8 @@ return [
                 ]
             ]
         ]
+    ],
+    'extra_info' => [
+        'conversion' => '',
     ]
 ];

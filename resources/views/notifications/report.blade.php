@@ -25,7 +25,9 @@
                         <th scope="col" class="col-md-4">Info</th>
                         <th scope="col" class="col-md-2">Created</th>
                         <th scope="col" class="col-md-1">Audience</th>
-                        <th scope="col" class="col-md-2">Sent/Received/Open</th>
+                        <th scope="col" class="col-md-2">Sends</th>
+                        <th scope="col" class="col-md-2">Opens</th>
+                        <th scope="col" class="col-md-2">Conversions</th>
                     </tr>
                     @foreach($data as $item)
                     <tr>
@@ -37,8 +39,10 @@
                             <div>Target: {{ $item['target'] }}</div>
                         </td>
                         <td>{{ $item['created'] }}</td>
-                        <td>{{ $item['tokens_count'] }}</td>
-                        <td>{{ $item['fcm_sent_count'] }} / {{ $item['fcm_notification_received_count'] }} / {{ $item['fcm_notification_open_count'] }}</td>
+                        <td>{{ $item['audience'] }}</td>
+                        <td>{{ $item['sends'] }}</td>
+                        <td>{{ $item['opens'] }}</td>
+                        <td>{{ $item['conversions'] }}</td>
                     </tr>
                     @endforeach
                     </tbody>
@@ -68,14 +72,18 @@
                             <th scope="col" class="col-md-2">Notification Created</th>
                             <th scope="col" class="col-md-2">Counts</th>
                             <th scope="col" class="col-md-2">Audience</th>
-                            <th scope="col" class="col-md-3">Sent/Received/Open</th>
+                            <th scope="col" class="col-md-2">Sends</th>
+                            <th scope="col" class="col-md-2">Opens</th>
+                            <th scope="col" class="col-md-2">Conversions</th>
                         </tr>
                         @foreach($cohort as $key => $value)
                             <tr>
                                 <th scope="row">{{ $key }}</th>
                                 <td>{{ $value['counts'] }}</td>
-                                <td>{{ $value['tokens_count'] }}</td>
-                                <td>{{ $value['fcm_sent_count'] }} / {{ $value['fcm_notification_received_count'] }} / {{ $value['fcm_notification_open_count'] }}</td>
+                                <td>{{ $value['audience'] }}</td>
+                                <td>{{ $value['sends'] }}</td>
+                                <td>{{ $value['opens'] }}</td>
+                                <td>{{ $value['conversions'] }}</td>
                             </tr>
                         @endforeach
                         </tbody>

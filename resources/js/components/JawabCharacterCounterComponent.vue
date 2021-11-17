@@ -13,9 +13,13 @@ export default {
     charactersLeft() {
 
       let char = (this.text ?? '').length,
-          limit = parseInt(this.limit) ?? 140;
+          limit = parseInt(this.limit) ?? 0;
 
-      return (limit - char) + " / " + limit + " characters remaining";
+      if(limit) {
+        return (limit - char) + " / " + limit + " characters remaining";
+      } else {
+        return char + " characters";
+      }
     }
   }
 }

@@ -94,6 +94,10 @@ class FcmNotification
             $rawMessage['data']['notification_id'] = $payload['notification_id'];
         }
 
+        if (isset($payload['deeplink'])) {
+            $rawMessage['data']['deeplink'] = $payload['deeplink'];
+        }
+
         return $rawMessage;
     }
 }

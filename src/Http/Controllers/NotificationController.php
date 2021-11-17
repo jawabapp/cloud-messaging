@@ -3,12 +3,13 @@
 namespace Jawabapp\CloudMessaging\Http\Controllers;
 
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Google\Cloud\BigQuery\BigQueryClient;
 use Illuminate\Validation\ValidationException;
 use Jawabapp\CloudMessaging\Models\Notification;
@@ -78,7 +79,7 @@ class NotificationController extends Controller
 
             $imageUrl = null;
             if ($request->hasFile('image')) {
-                $imageUrl = \Storage::url($request->file('image')->store('notifications'));
+                $imageUrl = Storage::url($request->file('image')->store('notifications'));
                 $payload['image'] = $imageUrl;
             }
 
@@ -131,7 +132,178 @@ class NotificationController extends Controller
         return redirect(route('jawab.notifications.index'));
     }
 
-    protected function deleteRedisJobs(Notification $notification)
+    public function reportRefresh()
+    {
+        $this->getOpenAnalytics(true);
+        return redirect(route('jawab.notifications.report'));
+    }
+
+    public function report()
+    {
+
+        $start = Carbon::now()->subWeeks(1);
+        $end = Carbon::now();
+
+        $items = Notification::whereBetween('created_at', array($start, $end))->latest()->get();
+
+        $data = collect();
+
+        foreach ($items as $item) {
+            $this->prepareItem($item, $data);
+        }
+
+        $cohort = $data->groupBy('created')->map(function ($row) {
+            return [
+                'counts' => $row->count(),
+                'audience' => $row->sum('audience'),
+                'sends' => $row->sum('sends'),
+                'opens' => $row->sum('opens'),
+                'conversions' => $row->sum('conversions'),
+            ];
+        });
+
+        Cache::forever('last-cohort', $cohort->all());
+
+        return view('cloud-messaging::notifications.report')->with('data', $data)->with('cohort', $cohort);
+    }
+
+    public function downloadCohort()
+    {
+        $filename = 'notifications-cohort.csv';
+        $data = collect();
+
+        $cohort = Cache::get('last-cohort');
+        if($cohort) {
+            collect($cohort)->each(function ($item, $date) use ($data) {
+                $data->push([
+                    'Notification Created' => $date,
+                    'Counts' => $item['counts'] ?? 0,
+                    'Audience' => $item['audience'] ?? 0,
+                    'Sends' => $item['sends'] ?? 0,
+                    'Opens' => $item['opens'] ?? 0,
+                    'Conversions' => $item['conversions'] ?? 0,
+                ]);
+            });
+        } else {
+            $data->push([
+                'Notification Created' => 'No Data',
+                'Counts' => 0,
+                'Audience' => 0,
+                'Sends' => 0,
+                'Opens' => 0,
+                'Conversions' => 0,
+            ]);
+        }
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Description' => 'File Transfer',
+            'Content-Disposition' => "attachment; filename={$filename}",
+            'filename' => $filename
+        ];
+
+        return response($this->csv($data->all()), 200, $headers);
+    }
+
+    /********************************************** HELPERS **********************************************/
+
+    private function prepareItem(Notification $item, Collection $data)
+    {
+
+        $sends = 0;
+        collect($item->response)->each(function ($item) use (&$sends) {
+            $sends += intval($item['success']);
+        });
+
+        $openCount = $this->getOpens($item->id);
+        $conversionCount = $this->getConversions($item->extra_info['conversion'] ?? null, $item->id);
+
+        $targetAudienceString = config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target);
+
+        $data->push([
+            'id' => $item->id,
+            'title' => $item->title,
+            'text' => $item->text,
+            'sent_by' => $item->user->name ?? '',
+            'created' => $item->created_at->toDateString(),
+            'target' => $targetAudienceString,
+            'audience' => $item->campaign['tokens_count'] ?? 0,
+            'sends' => $sends,
+            'opens' => $openCount['counts'] ?? 0,
+            'conversions' => $conversionCount['counts'] ?? 0,
+        ]);
+    }
+
+    private function bigQuery($eventName) {
+
+        $yesterday = now()->format('Y*');
+        $tableName = config('cloud-messaging.big_query.table_name');
+        $dataSource =  "{$tableName}.events_{$yesterday}";
+
+        return trim("
+        with
+        notification_analytics as (SELECT
+            event_param.value.string_value as notification_id, count(distinct user_pseudo_id) as counts
+            FROM `{$dataSource}`, unnest(event_params) AS event_param
+            where event_name = '{$eventName}' and event_param.key = 'notification_id'
+            group by event_param.value.string_value)
+
+        select * from notification_analytics
+        ");
+    }
+
+    /**
+     * @param false $clearCache
+     * @return mixed
+     */
+    private function getOpenAnalytics($clearCache = false)
+    {
+        $key = 'biq-query-notification-counts';
+
+        if ($clearCache || !Cache::has($key)) {
+
+            $query = $this->bigQuery(config('cloud-messaging.notification_open_event_name'));
+            $data = $this->executeBigQuery($query);
+
+            Cache::put($key, $data, now()->addHours(12));
+        } else {
+            $data = Cache::get($key);
+        }
+
+        return $data;
+    }
+
+    private function getOpens($notificationId) {
+        $data = $this->getOpenAnalytics();
+        return $data->where('notification_id', $notificationId)->first();
+    }
+
+    private function getConversions($eventName, $notificationId) {
+        if($eventName) {
+            $query = $this->bigQuery($eventName) . " where notification_id = '{$notificationId}'";
+            return $this->executeBigQuery($query)->first();
+        }
+        return [];
+    }
+
+    private function executeBigQuery($query) {
+
+        $bigQuery = new BigQueryClient([
+            'keyFilePath' => storage_path(config('cloud-messaging.big_query.key_file_path')),
+            'projectId' => config('cloud-messaging.big_query.project_id'),
+        ]);
+
+        $queryJobConfig = $bigQuery->query($query);
+        $queryResults = $bigQuery->runQuery($queryJobConfig);
+
+        if ($queryResults->isComplete()) {
+            $rows = $queryResults->rows();
+        }
+
+        return collect($rows ?? []);
+    }
+
+    private function deleteRedisJobs(Notification $notification)
     {
         $key = "queues:cloud-message:delayed";
 
@@ -154,190 +326,28 @@ class NotificationController extends Controller
         }
     }
 
-    public function reportRefresh()
+    private function csv($array, $headers = [])
     {
-        //$this->getNotificationCountsFromBigQuery(true);
-        return redirect(route('jawab.notifications.report'));
-    }
-
-    public function report()
-    {
-
-        $start = Carbon::now()->subWeeks(1);
-        $end = Carbon::now();
-
-        $items = Notification::whereBetween('created_at', array($start, $end))->latest()->get();
-
-        $data = collect();
-
-        foreach ($items as $item) {
-            $this->prepareItem($item, $data);
+        if (empty($array)) {
+            return '';
         }
 
-        $cohort = $data->groupBy('created')->map(function ($row) {
-            return [
-                'tokens_count' => $row->sum('tokens_count'),
-                'viewed' => $row->sum('viewed'),
-                'vote' => $row->sum('vote_up') + $row->sum('vote_down'),
-                'counts' => $row->count(),
-                'comments' => $row->sum('comments'),
-                'fcm_sent_count' => $row->sum('fcm_sent_count'),
-                'fcm_notification_received_count' => $row->sum('fcm_notification_received_count'),
-                'fcm_notification_open_count' => $row->sum('fcm_notification_open_count'),
-                'fcm_post_view_count' => $row->sum('fcm_post_view_count'),
-                'fcm_post_vote_count' => $row->sum('fcm_post_vote_count'),
-                // 'fcm_post_share_count' => $row->sum('fcm_post_share_count'),
-                'fcm_post_comment_count' => $row->sum('fcm_post_comment_count'),
-            ];
-        });
-
-        $cohortData = collect();
-        $cohort->each(function ($item, $date) use ($cohortData) {
-            $cohortData->push([
-                'Notification Created' => $date,
-                'Counts' => $item['counts'],
-                'Audience' => $item['tokens_count'],
-                'Sent' => "{$item['fcm_sent_count']}",
-                'Received' => "{$item['fcm_notification_received_count']}",
-                'Open' => "{$item['fcm_notification_open_count']}",
-                'Post Viewed' => "{$item['viewed']}",
-                'Campaign Viewed' => "{$item['fcm_post_view_count']}",
-                'Post Vote' => "{$item['vote']}",
-                'Campaign Vote' => "{$item['fcm_post_vote_count']}",
-                'Post Comments' => "{$item['comments']}",
-                // 'Campaign Comments' => "{$item['fcm_post_share_count']}",
-                'Campaign Comments' => "{$item['fcm_post_comment_count']}",
-            ]);
-        });
-        \Storage::put('notifications-cohort.csv', csv($cohortData->all()));
-
-        return view('cloud-messaging::notifications.report')->with('data', $data)->with('cohort', $cohort);
-    }
-
-    private function prepareItem(Notification $item, Collection $data)
-    {
-
-        $campaign_type = $item->campaign['type'] ?? '';
-        $campaign_link = $item->campaign['link'] ?? '';
-        $campaign_id = $item->campaign['id'] ?? 0;
-        $campaign_tokens_count = $item->campaign['tokens_count'] ?? 0;
-
-        $response = collect($item->response);
-
-        $fcm_sent_count = 0;
-
-        $response->each(function ($item) use (&$fcm_sent_count) {
-            $fcm_sent_count += intval($item['success']);
-        });
-
-        if (request()->get('google')) {
-            //TODO: check big query
-            // $bigQueryCounts = $this->getNotificationCountsFromBigQuery();
-            $bigQueryCount = $bigQueryCounts->where('notification_id', $item->id)->first();
-        } else {
-            //TODO: update count in report
-            $bigQueryCount = $this->getNotificationReport($item->id);
-        }
-
-        $campaign = null;
-
-        $data->push([
-            'id' => $item->id,
-            'fcm_sent_count' => $fcm_sent_count,
-            'fcm_notification_received_count' => $bigQueryCount['notification_received_count'] ?? 0,
-            'fcm_notification_open_count' => $bigQueryCount['notification_open_count'] ?? 0,
-            'fcm_post_view_count' => $bigQueryCount['post_view_count'] ?? 0,
-            'fcm_post_vote_count' => $bigQueryCount['post_vote_count'] ?? 0,
-            //                    'fcm_post_share_count' => $bigQueryCount['post_share_count'] ?? 0,
-            'fcm_post_comment_count' => $bigQueryCount['post_comment_count'] ?? 0,
-            'title' => $item->title,
-            'text' => $item->text,
-            'sent_by' => $item->user->name ?? '',
-            'created' => $item->created_at->toDateString(),
-            'tokens_count' => $campaign_tokens_count,
-            'viewed' => 0,
-            'vote_up' => 0,
-            'vote_down' => 0,
-            'comments' => 0,
-            'target' => config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target),
-            'campaign_created' => '',
-            'campaign_title' => '',
-            'campaign_type' => '',
-            'campaign_id' => '',
-            'campaign_link' => '',
-        ]);
-    }
-
-    private function getNotificationReport($id)
-    {
-        return [
-            'notification_received_count' => 0,
-            'notification_open_count' => 0,
-            'post_view_count' => 0,
-            'post_vote_count' => 0,
-            'post_share_count' => 0,
-            'post_comment_count' => 0,
-        ];
-    }
-
-    /**
-     * @param bool $clearCache
-     * @return Collection|mixed
-     * @throws \Google\Cloud\Core\Exception\GoogleException
-     */
-    private function getNotificationCountsFromBigQuery($clearCache = false)
-    {
-
-        $key = 'biq-query-notification-counts';
-
-        if ($clearCache || !\Cache::has($key)) {
-
-            $bigQuery = new BigQueryClient([
-                'keyFilePath' => storage_path(config('cloud-messaging.big_query.key_file_path')),
-                'projectId' => config('cloud-messaging.big_query.project_id'),
-            ]);
-
-            $yesterday = now()->format('Y*');
-
-            $table_name = config('cloud-messaging.big_query.table_name') . ".events_{$yesterday}";
-
-            $query = str_replace(
-                ['{DATA_TABLE}'],
-                [$table_name],
-                file_get_contents(storage_path('big-query/notification-counts.sql'))
-            );
-
-            $queryJobConfig = $bigQuery->query($query);
-            $queryResults = $bigQuery->runQuery($queryJobConfig);
-
-            if ($queryResults->isComplete()) {
-                $rows = $queryResults->rows();
+        foreach ($array as &$item) {
+            foreach ($item as $key => &$value) {
+                //fix value
+                $value = str_replace(',', '-', $value);
             }
-
-            $data = collect($rows ?? []);
-
-            \Cache::put($key, $data, now()->addHours(12));
-        } else {
-            $data = \Cache::get($key);
         }
 
-        return $data;
-    }
+        if (!empty($headers)) {
+            $txt = implode(',', $headers) . PHP_EOL;
+        } else {
+            $txt = implode(',', array_keys((array) $array[0])) . PHP_EOL;
+        }
+        foreach ($array as $line) {
+            $txt .= implode(',', array_values((array) $line)) . PHP_EOL;
+        }
 
-    public function downloadCohort()
-    {
-
-        $filename = 'notifications-cohort.csv';
-
-        $csvPath = \Storage::get($filename);
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Description' => 'File Transfer',
-            'Content-Disposition' => "attachment; filename={$filename}",
-            'filename' => $filename
-        ];
-
-        return response($csvPath, 200, $headers);
+        return $txt;
     }
 }

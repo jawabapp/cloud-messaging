@@ -2,12 +2,12 @@
   <div class="row">
     <div class="col-md-8">
       <div class="card-body">
-        <div class="form-group">
-          <label for="name" class="col-form-label text-md-right">{{ info.nameLabel }}</label>
-          <input id="name" type="text" class="form-control" :class="{ 'is-invalid' : errors.name && errors.name.length }" name="extra_info[name]" v-model="info.nameModel"/>
-          <jawab-character-counter :text="info.nameModel" :limit="140" ></jawab-character-counter>
-          <template v-if="errorExtraInfo">
-            <span v-for="(error, index) in errors.name" :key="index" class="invalid-feedback" role="alert"><strong>{{ error }}</strong></span>
+        <div v-for="(field, field_key) in fields" class="form-group" :key="field_key">
+          <label :for="field.name" class="col-form-label text-md-right">Notification {{ field.label }}</label>
+          <input :id="field.name" type="text" class="form-control" :class="{ 'is-invalid' : errors.hasOwnProperty('extra_info.' + field.name) }" :name="'extra_info[' + field.name + ']'" v-model="field.model"/>
+          <jawab-character-counter :text="field.model" ></jawab-character-counter>
+          <template v-if="errors.hasOwnProperty('extra_info.' + field.name)">
+            <span v-for="(error, index) in errors['extra_info.' + field.name]" :key="index" class="invalid-feedback" role="alert"><strong>{{ error }}</strong></span>
           </template>
         </div>
       </div>
@@ -23,12 +23,12 @@ export default {
     'jawab-character-counter': JawabCharacterCounterComponent
   },
   props: {
-    extraInfo:{
+    jsonData:{
       type: String,
       required: false,
       default: ''
     },
-    errorExtraInfo: {
+    jsonErrors: {
       type: String,
       required: false,
       default: ''
@@ -36,29 +36,28 @@ export default {
   },
   data() {
     return {
-      info:{
-        nameLabel: 'Notification Name',
-        nameModel: '',
-      },
-      errors:{
-        name:[]
-      }
+      fields : [],
+      errors : {}
     }
   },
   created() {
-    if (this.extraInfo) {
-      let extraInfo = JSON.parse(this.extraInfo);
-      if (typeof extraInfo === 'object' && extraInfo !== null) {
-        this.info.nameModel = extraInfo.name;
-      }else{
-        this.info.nameModel = this.extraInfo.name;
+    if (this.jsonData) {
+      let jsonData = JSON.parse(this.jsonData);
+      if (typeof jsonData === 'object') {
+        for (const [key, value] of Object.entries(jsonData)) {
+          this.fields.push({
+            label: key.charAt(0).toUpperCase() + key.slice(1),
+            name: key,
+            model: value
+          })
+        }
       }
     }
 
-    if (this.errorExtraInfo) {
-      let errorExtraInfo = JSON.parse(this.errorExtraInfo);
-      if (typeof errorExtraInfo === 'object' && errorExtraInfo !== null) {
-        this.errors.name = errorExtraInfo['extra_info.name'];
+    if (this.jsonErrors) {
+      let jsonErrors = JSON.parse(this.jsonErrors);
+      if (typeof jsonErrors === 'object') {
+        this.errors = jsonErrors;
       }
     }
   }
