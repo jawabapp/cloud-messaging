@@ -11,7 +11,6 @@
                 <div class="col text-right">
                     <a href="{{ route('jawab.notifications.index') }}" class='btn btn-outline-primary btn-sm'>Cloud Messaging</a>
                     <a href="{{ route('jawab.notifications.compose') }}" class='btn btn-primary btn-sm text-white'>Compose notification</a>
-                    <a href="{{ route('jawab.notifications.report.refresh') }}" class='btn btn-danger btn-sm'>Refresh $</a>
                 </div>
             </div>
         </div>

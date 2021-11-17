@@ -9,7 +9,6 @@ Route::get('show/{notification}', 'NotificationController@show')->name('jawab.no
 Route::get('delete/{notification}', 'NotificationController@delete')->name('jawab.notifications.delete');
 Route::get('report', 'NotificationController@report')->name('jawab.notifications.report');
 Route::get('download-cohort', 'NotificationController@downloadCohort')->name('jawab.notifications.download-cohort');
-Route::get('report-refresh', 'NotificationController@reportRefresh')->name('jawab.notifications.report.refresh');
 
 Route::group(['prefix' => 'api'], function () {
     Route::post('target-audience', 'ApiController@targetAudience');

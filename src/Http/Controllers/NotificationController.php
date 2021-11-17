@@ -132,12 +132,6 @@ class NotificationController extends Controller
         return redirect(route('jawab.notifications.index'));
     }
 
-    public function reportRefresh()
-    {
-        $this->getOpenAnalytics(true);
-        return redirect(route('jawab.notifications.report'));
-    }
-
     public function report()
     {
 
@@ -256,13 +250,13 @@ class NotificationController extends Controller
      * @param false $clearCache
      * @return mixed
      */
-    private function getOpenAnalytics($clearCache = false)
+    private function getEventAnalytics($eventName)
     {
-        $key = 'biq-query-notification-counts';
+        $key = $eventName;
 
-        if ($clearCache || !Cache::has($key)) {
+        if (!Cache::has($key)) {
 
-            $query = $this->bigQuery(config('cloud-messaging.notification_open_event_name'));
+            $query = $this->bigQuery($eventName);
             $data = $this->executeBigQuery($query);
 
             Cache::put($key, $data, now()->addHours(12));
@@ -274,14 +268,14 @@ class NotificationController extends Controller
     }
 
     private function getOpens($notificationId) {
-        $data = $this->getOpenAnalytics();
+        $data = $this->getEventAnalytics(config('cloud-messaging.notification_open_event_name'));
         return $data->where('notification_id', $notificationId)->first();
     }
 
     private function getConversions($eventName, $notificationId) {
         if($eventName) {
-            $query = $this->bigQuery($eventName) . " where notification_id = '{$notificationId}'";
-            return $this->executeBigQuery($query)->first();
+            $data = $this->getEventAnalytics($eventName);
+            return $data->where('notification_id', $notificationId)->first();
         }
         return [];
     }
