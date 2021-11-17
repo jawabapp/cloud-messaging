@@ -83,6 +83,14 @@ class NotificationController extends Controller
                 $payload['image'] = $imageUrl;
             }
 
+            if ($request->has('extra_info')) {
+                $extra_info = $request->get('extra_info');
+
+                foreach ($extra_info as $key => $value) {
+                    $payload['data'][$key] = $value;
+                }
+            }
+
             $notification = Notification::create([
                 'image'  => $imageUrl,
                 'extra_info'  => $request->get('extra_info'),

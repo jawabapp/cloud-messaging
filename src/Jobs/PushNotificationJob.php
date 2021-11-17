@@ -128,7 +128,7 @@ class PushNotificationJob implements ShouldQueue
 
             $response = collect();
 
-            $message = FcmNotification::prepare($this->payload, false);
+            $message = FcmNotification::prepare($this->payload);
 
             $users->chunk(500)->each(function ($chunked) use ($message, $response) {
                 try {

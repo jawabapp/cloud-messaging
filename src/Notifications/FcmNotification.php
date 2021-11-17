@@ -45,7 +45,7 @@ class FcmNotification
         }
     }
 
-    public static function prepare(array $payload, $asData = true, $silent = false)
+    public static function prepare(array $payload, $asData = false, $silent = false)
     {
 
         $expiration = Carbon::today()->addDays(7);
@@ -82,20 +82,18 @@ class FcmNotification
 
         if (!empty($payload['data']) && is_array($payload['data'])) {
             $rawMessage['data'] = $payload['data'];
+            unset($payload['data']);
+        }
+
+        if (isset($payload['notification_id'])) {
+            $rawMessage['data']['notification_id'] = $payload['notification_id'];
+            unset($payload['notification_id']);
         }
 
         if ($asData) {
             $rawMessage['data']['payload'] = json_encode($payload);
         } else {
             $rawMessage['notification'] = $payload;
-        }
-
-        if (isset($payload['notification_id'])) {
-            $rawMessage['data']['notification_id'] = $payload['notification_id'];
-        }
-
-        if (isset($payload['deeplink'])) {
-            $rawMessage['data']['deeplink'] = $payload['deeplink'];
         }
 
         return $rawMessage;
