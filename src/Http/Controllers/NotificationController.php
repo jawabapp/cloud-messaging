@@ -267,7 +267,7 @@ class NotificationController extends Controller
             $query = $this->bigQuery($eventName);
             $data = $this->executeBigQuery($query);
 
-            Cache::put($key, $data, now()->addHours(1));
+            Cache::put($key, $data, now()->addHours(12));
         } else {
             $data = Cache::get($key);
         }
