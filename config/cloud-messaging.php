@@ -7,6 +7,7 @@ return [
         'web'
     ],
     'path' => $path,
+    'disk-storage' => null,
     'big_query' => [
         'key_file_path' => env('GOOGLE_APPLICATION_CREDENTIALS'),
         'project_id' => env('BIG_QUERY_PROJECT_ID'),

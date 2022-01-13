@@ -79,7 +79,7 @@ class NotificationController extends Controller
 
             $imageUrl = null;
             if ($request->hasFile('image')) {
-                $imageUrl = Storage::url($request->file('image')->store('notifications'));
+                $imageUrl = Storage::disk(config('cloud-messaging.disk-storage'))->url($request->file('image')->store('notifications', config('cloud-messaging.disk-storage')));
                 $payload['image'] = $imageUrl;
             }
 
