@@ -214,7 +214,7 @@ class NotificationController extends Controller
 
         $sends = 0;
         collect($item->response)->each(function ($item) use (&$sends) {
-            $sends += intval($item['success']);
+            $sends += intval($item['success'] ?? 0);
         });
 
         $openCount = $this->getOpens($item->id);
