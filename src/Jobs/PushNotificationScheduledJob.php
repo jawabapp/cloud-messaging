@@ -12,6 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Jawabapp\CloudMessaging\Models\Notification;
 use Jawabapp\CloudMessaging\Notifications\FcmNotification;
+use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
 
 class PushNotificationScheduledJob implements ShouldQueue
 {
@@ -81,7 +82,13 @@ class PushNotificationScheduledJob implements ShouldQueue
 
             $users->chunk(500)->each(function ($chunked) use ($message, $response) {
                 try {
-                    $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
+                    $res = FcmNotification::send($message, $chunked->pluck('fcm_token')->all());
+                    $response->push($res);
+                    FCMNotificationSent::dispatch([
+                        'notification' => $this->notification->only('target', 'campaign'),
+                        'receivers_ids' => $chunked->pluck('user_id')->all(),
+                        'response' => $res
+                    ]);
                 } catch (\Exception $exception) {
                     Log::error("[PushNotificationScheduledJob] send-notification " . $exception->getMessage());
                 }

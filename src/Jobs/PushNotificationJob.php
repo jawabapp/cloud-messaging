@@ -9,6 +9,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
 use Jawabapp\CloudMessaging\Models\Notification;
 use Jawabapp\CloudMessaging\Notifications\FcmNotification;
 use Jawabapp\CloudMessaging\Traits\HasCloudMessagingQueue;
@@ -132,7 +133,13 @@ class PushNotificationJob implements ShouldQueue
 
             $users->chunk(500)->each(function ($chunked) use ($message, $response) {
                 try {
-                    $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
+                    $res = FcmNotification::send($message, $chunked->pluck('fcm_token')->all());
+                    $response->push($res);
+                    FCMNotificationSent::dispatch([
+                        'notification' => $this->notification->only('extra_info'),
+                        'receivers_ids' => $chunked->pluck('user_id')->all(),
+                        'response' => $res
+                    ]);
                 } catch (\Exception $exception) {
                     Log::error("[PushNotificationJob] send-notification " . $exception->getMessage());
                 }
