@@ -9,25 +9,30 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Support\Facades\Log;
 
 class FCMNotificationSent
 {
     use Dispatchable, SerializesModels;
 
+    public $message;
+    public $response;
+    public $type;
+    public $sender;
 
-    /**
-     * @var array
-     */
-    public $data;
-
-    /**
-     * FCMNotificationSent constructor.
-     * @param array $data
-     */
-    public function __construct(array $data)
+    public function __construct($message, $response, $type, $sender)
     {
-        \Log::info('FCM Notifications Event dispatched');
-        $this->data = $data;
+//        Log::info('FCM Notifications Event dispatched', [
+//            'message' => $message,
+//            'response' => $response,
+//            'type' => $type,
+//            'sender' => $sender
+//        ]);
+
+        $this->message = $message;
+        $this->response = $response;
+        $this->type = $type;
+        $this->sender = $sender;
     }
 }
 

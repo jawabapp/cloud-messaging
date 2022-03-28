@@ -4,6 +4,8 @@ namespace Jawabapp\CloudMessaging\Notifications;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Illuminate\Support\Collection;
+use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
 
 class FcmNotification
 {
@@ -14,24 +16,16 @@ class FcmNotification
         $this->client = new Client();
     }
 
-    public static function send($message, array $tokens)
+    private function send($message, array $tokens)
     {
         if (!$tokens) {
             return 'Fcm_Notification (No Tokens)';
-        }
-        static $client;
-
-        if (is_null($client)) {
-            $client = (new self())->client;
         }
 
         try {
             $body = array_merge($message, ['registration_ids' => $tokens]);
 
-            $response = $client->request(
-                'POST',
-                'https://fcm.googleapis.com/fcm/send',
-                [
+            $response = $this->client->request('POST', 'https://fcm.googleapis.com/fcm/send', [
                     'headers' => [
                         'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
                         'Content-Type'  => 'application/json'
@@ -39,7 +33,7 @@ class FcmNotification
                     'body' => json_encode($body)
                 ]
             );
-            return json_decode($response->getBody());
+            return json_decode($response->getBody(), true);
         } catch (\Exception $e) {
             return 'Fcm_Notification (' . $e->getMessage() . ')';
         }
@@ -97,5 +91,41 @@ class FcmNotification
         }
 
         return $rawMessage;
+    }
+
+    public static function sendMessage($message, Collection $dataTokens, $type = null, $sender = null): array
+    {
+
+        $tokens = $dataTokens->pluck('fcm_token');
+
+        if (config('cloud-messaging.test-types')) {
+
+            $testTypes = config('cloud-messaging.test-types', []);
+            $testTokens = config('cloud-messaging.test-tokens', []);
+
+            if (in_array($type, $testTypes)) {
+                $tokens = $tokens->intersect($testTokens);
+            }
+        }
+
+        $response = [];
+
+        // remove empty and duplicate
+        $tokens = $tokens->filter(function ($value) { return !is_null($value); })->unique()->values();
+        if($tokens) {
+
+            $client = (new self);
+
+            foreach ($tokens->chunk(500) as $chunkId => $chunk) {
+                $fcm_tokens = $chunk->all();
+                $response[$chunkId]['sent_at'] = now();
+                $response[$chunkId]['fcm_tokens'] = $fcm_tokens;
+                $response[$chunkId]['api_response'] = $client->send($message, $fcm_tokens);
+            }
+
+            FCMNotificationSent::dispatch($message, $response, $type, $sender);
+        }
+        return $response;
+
     }
 }

@@ -9,7 +9,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
 use Jawabapp\CloudMessaging\Models\Notification;
 use Jawabapp\CloudMessaging\Notifications\FcmNotification;
 use Jawabapp\CloudMessaging\Traits\HasCloudMessagingQueue;
@@ -20,7 +19,7 @@ class PushNotificationJob implements ShouldQueue
 
     private $notification;
     private $payload;
-    private $notifiable_model;
+    private $model;
 
     /**
      * The number of times the job may be attempted.
@@ -47,7 +46,7 @@ class PushNotificationJob implements ShouldQueue
         $this->notification = $notification;
         $this->payload = $payload;
         $this->payload['notification_id'] = $notification->id;
-        $this->notifiable_model = config('cloud-messaging.notifiable_model');
+        $this->model = config('cloud-messaging.notifiable_model');
     }
 
     /**
@@ -79,10 +78,9 @@ class PushNotificationJob implements ShouldQueue
     protected function publishToScheduledDate($scheduledDate = null)
     {
         if (config('cloud-messaging.country_code_column')) {
-            $country_users = $this->notifiable_model::getJawabTargetAudience($this->notification->target)
-                ->groupBy([
-                    config('cloud-messaging.country_code_column')
-                ]);
+            $country_users = $this->model::getJawabTargetAudience($this->notification->target)->groupBy([
+                config('cloud-messaging.country_code_column')
+            ]);
 
             $countries = collect(config('cloud-messaging-countries'));
 
@@ -103,11 +101,9 @@ class PushNotificationJob implements ShouldQueue
         $date_time = Carbon::parse($scheduledDate);
 
         $jobId = app(\Illuminate\Contracts\Bus\Dispatcher::class)->dispatch(
-            (new PushNotificationScheduledJob($this->notification, $this->payload, $country_code))
-                ->onQueue('cloud-message')
-                ->delay(
-                    now($countryTimeZone)->diff(Carbon::parse($date_time, $countryTimeZone))
-                )
+            (new PushNotificationScheduledJob($this->notification, $this->payload, $country_code))->onQueue('cloud-message')->delay(
+                now($countryTimeZone)->diff(Carbon::parse($date_time, $countryTimeZone))
+            )
         );
 
         $schedule = $this->notification->schedule;
@@ -125,28 +121,14 @@ class PushNotificationJob implements ShouldQueue
                 'status' => 'processing'
             ]);
 
-            $users = $this->notifiable_model::getJawabTargetAudience($this->notification->target);
-
-            $response = collect();
+            $users = $this->model::getJawabTargetAudience($this->notification->target);
 
             $message = FcmNotification::prepare($this->payload);
 
-            $users->chunk(500)->each(function ($chunked) use ($message, $response) {
-                try {
-                    $res = FcmNotification::send($message, $chunked->pluck('fcm_token')->all());
-                    $response->push($res);
-                    FCMNotificationSent::dispatch([
-                        'notification' => $this->notification->only('extra_info'),
-                        'receivers_ids' => $chunked->pluck('user_id')->all(),
-                        'response' => $res
-                    ]);
-                } catch (\Exception $exception) {
-                    Log::error("[PushNotificationJob] send-notification " . $exception->getMessage());
-                }
-            });
+            $response = FcmNotification::sendMessage($message, $users, 'cloud-message', $this->notification->user_id);
 
             $this->notification->update([
-                'response' => $response->all(),
+                'response' => collect($response)->pluck('api_response')->all(),
                 'status' => 'completed'
             ]);
 
