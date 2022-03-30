@@ -18,7 +18,7 @@
       </div>
       <div v-for="(audience, index) in audiences" :key="index" class="row mt-2 pt-2 border-top">
         <div class="col-md-10">
-          <jawab-target-app-row :types="types" :filter-prefix-url="filterPrefixUrl" :audience-key="index" :app-key="appKey" :app="app" :audience="audience" :appTypes="appTypes" @changeType="changeType"/>
+          <jawab-target-app-row :os="os" :types="types" :filter-prefix-url="filterPrefixUrl" :audience-key="index" :app-key="appKey" :app="app" :audience="audience" :appTypes="appTypes" @changeType="changeType"/>
         </div>
         <div class="col-md-2 text-left">
           <a href="#" @click.prevent="and" class="btn btn-link" v-if="audience < types.length">and</a>
