@@ -98,10 +98,10 @@ class FcmNotification
 
         $tokens = $dataTokens->pluck('fcm_token');
 
-        if (config('cloud-messaging.test-types')) {
+        if (config('cloud-messaging.test.types')) {
 
-            $testTypes = config('cloud-messaging.test-types', []);
-            $testTokens = config('cloud-messaging.test-tokens', []);
+            $testTypes = config('cloud-messaging.test.types', []);
+            $testTokens = config('cloud-messaging.test.tokens', []);
 
             if (in_array($type, $testTypes)) {
                 $tokens = $tokens->intersect($testTokens);

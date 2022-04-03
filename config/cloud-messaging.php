@@ -60,5 +60,9 @@ return [
     ],
     'extra_info' => [
         'conversion' => '',
+    ],
+    'test' => [
+        'types' => [],
+        'tokens' => []
     ]
 ];
