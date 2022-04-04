@@ -118,7 +118,7 @@ class FcmNotification
 
             foreach ($tokens->chunk(500) as $chunkId => $chunk) {
                 $fcm_tokens = $chunk->all();
-                $response[$chunkId]['sent_at'] = now();
+                $response[$chunkId]['sent_at'] = now()->toDateTimeString();
                 $response[$chunkId]['fcm_tokens'] = $fcm_tokens;
                 $response[$chunkId]['api_response'] = $client->send($message, $fcm_tokens);
             }

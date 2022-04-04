@@ -22,13 +22,6 @@ class FCMNotificationSent
 
     public function __construct($message, $response, $type, $sender)
     {
-//        Log::info('FCM Notifications Event dispatched', [
-//            'message' => $message,
-//            'response' => $response,
-//            'type' => $type,
-//            'sender' => $sender
-//        ]);
-
         $this->message = $message;
         $this->response = $response;
         $this->type = $type;
