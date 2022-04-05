@@ -67,25 +67,24 @@ class PushNotificationScheduledJob implements ShouldQueue
                 'status' => 'processing'
             ]);
 
-            $query = $this->notifiable_model::getJawabTargetAudience($this->notification->target, false, true);
-
-            if ($this->country_code) {
-                $query->where(config('cloud-messaging.country_code_column'), $this->country_code);
-            }
-
-            $users = $query->get();
-
             $response = collect();
 
-            $message = FcmNotification::prepare($this->payload);
+            try {
+                $message = FcmNotification::prepare($this->payload);
 
-            $users->chunk(500)->each(function ($chunked) use ($message, $response) {
-                try {
-                    $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
-                } catch (\Exception $exception) {
-                    Log::error("[PushNotificationScheduledJob] send-notification " . $exception->getMessage());
+                $users = $this->notifiable_model::getJawabTargetAudience($this->notification->target, false, true);
+
+                if ($this->country_code) {
+                    $users->where(config('cloud-messaging.country_code_column'), $this->country_code);
                 }
-            });
+
+                $users->chunk(500, function ($chunked) use ($message, $response) {
+                    $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
+                });
+
+            } catch (\Exception $exception) {
+                Log::error("[PushNotificationScheduledJob] send-notification " . $exception->getMessage());
+            }
 
             $this->notification->update([
                 'response' => array_merge($this->notification->response ?? [], $response->all() ?? []),
