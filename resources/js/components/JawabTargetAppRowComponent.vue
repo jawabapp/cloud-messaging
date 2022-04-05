@@ -31,7 +31,7 @@
           </ejs-multiselect>
         </template>
         <template v-else-if="typeObject.type == 'SINGLE_SELECT'">
-            <ejs-dropdownlist 
+            <ejs-dropdownlist
               id='dropdownlist'
               ref='dropdown'
               :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
@@ -88,7 +88,13 @@ export default {
       type:String,
       required:true,
       default: '/api'
-    }
+    },
+    os: {
+      type: String,
+      required: true,
+      default: 'ios'
+    },
+
   },
   data() {
     return {
@@ -122,7 +128,7 @@ export default {
         this.options = this.typeObject.options
       } else {
         let os = document.getElementById(`audience-os-${this.app}`);
-        axios.get(`${this.filterPrefixUrl}/${type}?os=${os.value}`)
+        axios.get(`${this.filterPrefixUrl}/${type}?os=${this.os}`)
             .then(res => {
               this.options = res.data
             }).catch(err => {
