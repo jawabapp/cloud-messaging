@@ -79,7 +79,8 @@ class FCMServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Console\PublishCommand::class
+                Console\PublishCommand::class,
+                Console\RePushNotificationCommand::class,
             ]);
         }
     }
