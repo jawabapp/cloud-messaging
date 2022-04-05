@@ -67,22 +67,34 @@ class PushNotificationScheduledJob implements ShouldQueue
                 'status' => 'processing'
             ]);
 
-            $query = $this->model::getJawabTargetAudience($this->notification->target, false, true);
+            $response = collect();
 
-            if ($this->country_code) {
-                $query->where(config('cloud-messaging.country_code_column'), $this->country_code);
+            try {
+                $sender = $this->notification->user_id;
+
+                $message = FcmNotification::prepare($this->payload);
+
+                $users = $this->model::getJawabTargetAudience($this->notification->target, false, true);
+
+                if ($this->country_code) {
+                    $users->where(config('cloud-messaging.country_code_column'), $this->country_code);
+                }
+
+                $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
+
+                    $res = FcmNotification::sendMessage($message, $chunked, 'cloud-message', $sender);
+
+                    $response->push(collect($res)->pluck('api_response')->all());
+
+                });
+            } catch (\Exception $exception) {
+                $this->error("[PushNotificationJob] send-notification " . $exception->getMessage());
             }
-
-            $users = $query->get();
-
-            $message = FcmNotification::prepare($this->payload);
-
-            $response = FcmNotification::sendMessage($message, $users, 'cloud-message', $this->notification->user_id);
 
             $oldResponse = $this->notification->response ?? [];
 
             $this->notification->update([
-                'response' => array_merge($oldResponse, collect($response)->pluck('api_response')->all()),
+                'response' => array_merge($oldResponse, $response->all()),
             ]);
 
             $notification_job_ids = $this->notification->schedule['job_ids'] ?? [];
