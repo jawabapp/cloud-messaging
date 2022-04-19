@@ -19,7 +19,7 @@ class PushNotificationJob implements ShouldQueue
 
     private $notification;
     private $payload;
-    private $notifiable_model;
+    private $model;
 
     /**
      * The number of times the job may be attempted.
@@ -46,7 +46,7 @@ class PushNotificationJob implements ShouldQueue
         $this->notification = $notification;
         $this->payload = $payload;
         $this->payload['notification_id'] = $notification->id;
-        $this->notifiable_model = config('cloud-messaging.notifiable_model');
+        $this->model = config('cloud-messaging.notifiable_model');
     }
 
     /**
@@ -78,10 +78,9 @@ class PushNotificationJob implements ShouldQueue
     protected function publishToScheduledDate($scheduledDate = null)
     {
         if (config('cloud-messaging.country_code_column')) {
-            $country_users = $this->notifiable_model::getJawabTargetAudience($this->notification->target)
-                ->groupBy([
-                    config('cloud-messaging.country_code_column')
-                ]);
+            $country_users = $this->model::getJawabTargetAudience($this->notification->target)->groupBy([
+                config('cloud-messaging.country_code_column')
+            ]);
 
             $countries = collect(config('cloud-messaging-countries'));
 
@@ -104,9 +103,7 @@ class PushNotificationJob implements ShouldQueue
         $jobId = app(\Illuminate\Contracts\Bus\Dispatcher::class)->dispatch(
             (new PushNotificationScheduledJob($this->notification, $this->payload, $country_code))
                 ->onQueue('cloud-message')
-                ->delay(
-                    now($countryTimeZone)->diff(Carbon::parse($date_time, $countryTimeZone))
-                )
+                ->delay(now($countryTimeZone)->diff(Carbon::parse($date_time, $countryTimeZone)))
         );
 
         $schedule = $this->notification->schedule;
@@ -127,15 +124,18 @@ class PushNotificationJob implements ShouldQueue
             $response = collect();
 
             try {
+                $sender = $this->notification->id;
+
                 $message = FcmNotification::prepare($this->payload);
 
-                $users = $this->notifiable_model::getJawabTargetAudience($this->notification->target, false, true);
+                $users = $this->model::getJawabTargetAudience($this->notification->target, false, true);
 
-                $users->chunk(500, function ($chunked) use ($message, $response) {
-                    $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
+                $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
+                    $res = FcmNotification::sendMessage($message, $chunked, 'cloud-message', $sender);
+                    $response->push(collect($res)->pluck('api_response')->all());
                 });
             } catch (\Exception $exception) {
-                Log::error("[PushNotificationJob] send-notification " . $exception->getMessage());
+                $this->error("[PushNotificationJob] send-notification " . $exception->getMessage());
             }
 
             $this->notification->update([

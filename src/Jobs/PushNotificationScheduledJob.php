@@ -2,9 +2,9 @@
 
 namespace Jawabapp\CloudMessaging\Jobs;
 
-use Log;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -19,7 +19,7 @@ class PushNotificationScheduledJob implements ShouldQueue
 
     private $notification;
     private $payload;
-    private $notifiable_model;
+    private $model;
     private $country_code;
 
     /**
@@ -49,7 +49,7 @@ class PushNotificationScheduledJob implements ShouldQueue
         $this->payload['notification_id'] = $notification->id;
 
         $this->country_code = $country_code;
-        $this->notifiable_model = config('cloud-messaging.notifiable_model');
+        $this->model = config('cloud-messaging.notifiable_model');
     }
 
     /**
@@ -70,24 +70,28 @@ class PushNotificationScheduledJob implements ShouldQueue
             $response = collect();
 
             try {
+                $sender = $this->notification->id;
+
                 $message = FcmNotification::prepare($this->payload);
 
-                $users = $this->notifiable_model::getJawabTargetAudience($this->notification->target, false, true);
+                $users = $this->model::getJawabTargetAudience($this->notification->target, false, true);
 
                 if ($this->country_code) {
                     $users->where(config('cloud-messaging.country_code_column'), $this->country_code);
                 }
 
-                $users->chunk(500, function ($chunked) use ($message, $response) {
-                    $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
+                $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
+                    $res = FcmNotification::sendMessage($message, $chunked, 'cloud-message', $sender);
+                    $response->push(collect($res)->pluck('api_response')->all());
                 });
-
             } catch (\Exception $exception) {
-                Log::error("[PushNotificationScheduledJob] send-notification " . $exception->getMessage());
+                $this->error("[PushNotificationJob] send-notification " . $exception->getMessage());
             }
 
+            $oldResponse = $this->notification->response ?? [];
+
             $this->notification->update([
-                'response' => array_merge($this->notification->response ?? [], $response->all() ?? []),
+                'response' => array_merge($oldResponse, $response->all()),
             ]);
 
             $notification_job_ids = $this->notification->schedule['job_ids'] ?? [];
