@@ -16,7 +16,7 @@ class FcmNotification
         $this->client = new Client();
     }
 
-    private function send($message, array $tokens)
+    public function send($message, array $tokens)
     {
         if (!$tokens) {
             return 'Fcm_Notification (No Tokens)';
