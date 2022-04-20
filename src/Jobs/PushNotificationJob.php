@@ -131,15 +131,25 @@ class PushNotificationJob implements ShouldQueue
                 $users = $this->model::getJawabTargetAudience($this->notification->target, false, true);
 
                 $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
-                    $res = FcmNotification::sendMessage($message, $chunked, 'cloud-message', $sender);
-                    $response->push(collect($res)->pluck('api_response')->all());
+                    $apiResponse = FcmNotification::sendMessage($message, $chunked, 'cloud-message', $sender);
+                    $response->push($apiResponse[0]['api_response']);
                 });
             } catch (\Exception $exception) {
                 $this->error("[PushNotificationJob] send-notification " . $exception->getMessage());
             }
 
+            $success = 0;
+            $failure = 0;
+            $response->each(function ($item) use (&$success, &$failure) {
+                $success += intval($item['success'] ?? 0);
+                $failure += intval($item['failure'] ?? 0);
+            });
+
             $this->notification->update([
-                'response' => $response->all(),
+                'response' => [
+                    'success' => $success,
+                    'failure' => $failure,
+                ],
                 'status' => 'completed'
             ]);
 

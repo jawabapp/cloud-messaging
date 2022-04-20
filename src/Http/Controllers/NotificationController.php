@@ -212,11 +212,6 @@ class NotificationController extends Controller
     private function prepareItem(Notification $item, Collection $data)
     {
 
-        $sends = 0;
-        collect($item->response)->each(function ($item) use (&$sends) {
-            $sends += intval($item['success'] ?? 0);
-        });
-
         $openCount = $this->getOpens($item->id);
         $conversionCount = $this->getConversions($item->extra_info['conversion'] ?? null, $item->id);
 
@@ -230,7 +225,7 @@ class NotificationController extends Controller
             'created' => $item->created_at->toDateString(),
             'target' => $targetAudienceString,
             'audience' => $item->campaign['tokens_count'] ?? 0,
-            'sends' => $sends,
+            'sends' => $item->response['success'] ?? 0,
             'opens' => $openCount['counts'] ?? 0,
             'conversions' => $conversionCount['counts'] ?? 0,
         ]);
