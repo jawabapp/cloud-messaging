@@ -34,6 +34,8 @@ class RePushNotificationCommand extends Command
 
             if($notification && $notification->status !== 'completed') {
 
+                $sender = $notification->id;
+
                 $response = collect();
 
                 $payload = [
@@ -47,17 +49,29 @@ class RePushNotificationCommand extends Command
 
                 try {
                     $users = $notifiable_model::getJawabTargetAudience($notification->target, false, true);
-                    $users->chunk(500, function ($chunked) use ($message, $response) {
-                        $response->push(FcmNotification::send($message, $chunked->pluck('fcm_token')->all()));
+                    $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
+                        $apiResponse = FcmNotification::sendMessage($message, $chunked, 'cloud-message', $sender);
+                        $response->push($apiResponse[0]['api_response']);
                     });
                 } catch (\Exception $exception) {
                     $this->error("[PushNotificationJob] send-notification " . $exception->getMessage());
                 }
 
+                $success = 0;
+                $failure = 0;
+                $response->each(function ($item) use (&$success, &$failure) {
+                    $success += intval($item['success'] ?? 0);
+                    $failure += intval($item['failure'] ?? 0);
+                });
+
                 $notification->update([
-                    'response' => $response->all(),
+                    'response' => [
+                        'success' => $success,
+                        'failure' => $failure,
+                    ],
                     'status' => 'completed'
                 ]);
+
             }
         }
     }
