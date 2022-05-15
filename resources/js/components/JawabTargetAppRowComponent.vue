@@ -1,7 +1,10 @@
 <template>
   <div class="row">
+<!--    {{appTypes}}-->
+<!--    <br>-->
+<!--    {{audience}}-->
     <div class="col-md-4 border-right">
-      <select v-model="type" class="custom-select audience">
+      <select v-model="audience.type" class="custom-select audience" @change="changeTypeEvt($event)">
         <option value="">Select ...</option>
         <option v-for="(item,index) in types" :key="index" :value="item.value" :disabled="disabledType(item)">{{item.label}}</option>
       </select>
@@ -120,6 +123,9 @@ export default {
     }
   },
   methods: {
+    changeTypeEvt(event){
+      this.type = event.target.value;
+    },
     disabledType(type) {
       return Object.values(this.appTypes).includes(type.value)
     },

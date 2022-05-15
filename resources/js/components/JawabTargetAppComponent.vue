@@ -1,5 +1,6 @@
 <template>
   <div class="card">
+
     <div class="card-body bg-light">
       <div class="row">
         <div class="col-md-4 border-right">
@@ -84,18 +85,27 @@ export default {
     },
     and() {
       this.audiences.push({
-        [this.audiences.length + 1]:{}
+        [Math.random()]:{}
+            // [this.audiences.length + 1]:{}
       })
     },
     remove(audience) {
-      this.appTypes[audience] = undefined
+      const iteration = Object.keys(audience)[0];
+      const { [iteration]: index, ...rest } = this.appTypes;
+      this.appTypes  = rest
+
+
+//      this.appTypes[audience] = undefined
       this.audiences.splice(this.audiences.indexOf(audience), 1)
     },
     removeApp(app) {
       this.$emit('remove', app);
     },
     changeType(audience, type) {
-      this.appTypes[audience] = type
+      console.log(audience,type)
+      console.log(Object.keys(audience)[0])
+      this.appTypes[Object.keys(audience)[0]] = type
+//      this.appTypes[audience] = type
     }
   }
 }
