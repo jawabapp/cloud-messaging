@@ -1,6 +1,5 @@
 <template>
   <div class="card">
-
     <div class="card-body bg-light">
       <div class="row">
         <div class="col-md-4 border-right">
@@ -84,6 +83,9 @@ export default {
       });
     },
     and() {
+      if (this.audiences.filter(elm => {
+        return elm.type == undefined
+      }).length >0) return false;
       this.audiences.push({
         [Math.random()]:{}
             // [this.audiences.length + 1]:{}
@@ -102,8 +104,6 @@ export default {
       this.$emit('remove', app);
     },
     changeType(audience, type) {
-      console.log(audience,type)
-      console.log(Object.keys(audience)[0])
       this.appTypes[Object.keys(audience)[0]] = type
 //      this.appTypes[audience] = type
     }
