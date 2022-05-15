@@ -1,8 +1,5 @@
 <template>
   <div class="row">
-<!--    {{appTypes}}-->
-<!--    <br>-->
-<!--    {{audience}}-->
     <div class="col-md-4 border-right">
       <select v-model="audience.type" class="custom-select audience" @change="changeTypeEvt($event)">
         <option value="">Select ...</option>
@@ -113,6 +110,9 @@ export default {
     this.type = this.audience.type || '';
     this.condition = this.audience.condition || null;
     this.values = this.audience.options || [];
+  },
+  updated() {
+    this.type = this.audience.type || '';
   },
   watch: {
     type(val) {
