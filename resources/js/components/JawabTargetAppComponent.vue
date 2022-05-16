@@ -83,19 +83,29 @@ export default {
       });
     },
     and() {
+      if (this.audiences.filter(elm => {
+        return elm.type == undefined
+      }).length >0) return false;
       this.audiences.push({
-        [this.audiences.length + 1]:{}
+        [Math.random()]:{}
+            // [this.audiences.length + 1]:{}
       })
     },
     remove(audience) {
-      this.appTypes[audience] = undefined
+      const iteration = Object.keys(audience)[0];
+      const { [iteration]: index, ...rest } = this.appTypes;
+      this.appTypes  = rest
+
+
+//      this.appTypes[audience] = undefined
       this.audiences.splice(this.audiences.indexOf(audience), 1)
     },
     removeApp(app) {
       this.$emit('remove', app);
     },
     changeType(audience, type) {
-      this.appTypes[audience] = type
+      this.appTypes[Object.keys(audience)[0]] = type
+//      this.appTypes[audience] = type
     }
   }
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="row">
     <div class="col-md-4 border-right">
-      <select v-model="type" class="custom-select audience">
+      <select v-model="audience.type" class="custom-select audience" @change="changeTypeEvt($event)">
         <option value="">Select ...</option>
         <option v-for="(item,index) in types" :key="index" :value="item.value" :disabled="disabledType(item)">{{item.label}}</option>
       </select>
@@ -14,10 +14,9 @@
         </select>
       </div>
       <div class="col-md-4">
-        <template v-if="typeObject.type == 'MULTI_SELECT'">
           <ejs-multiselect
-              id='multiselect'
               class='audience'
+              :maximumSelectionLength="typeObject.type == 'SINGLE_SELECT' ? 1 : 1000"
               mode="CheckBox"
               :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
               :placeholder="`Select ${typeObject.selectLabel} ...`"
@@ -25,23 +24,10 @@
               :fields='fields'
               :allowFiltering='true'
               :showSelectAll='true'
-              v-model="values"
+              v-model="audience.options"
               selectAllText="Select All"
               unSelectAllText="unSelect All">
           </ejs-multiselect>
-        </template>
-        <template v-else-if="typeObject.type == 'SINGLE_SELECT'">
-            <ejs-dropdownlist
-              id='dropdownlist'
-              ref='dropdown'
-              :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
-              :placeholder="`Select ${typeObject.selectLabel} ...`"
-              :dataSource='options'
-              :fields='fields'
-              v-model="values"
-              :allowFiltering='true'>
-              </ejs-dropdownlist>
-        </template>
       </div>
     </template>
     <template v-else>
@@ -111,15 +97,26 @@ export default {
     this.condition = this.audience.condition || null;
     this.values = this.audience.options || [];
   },
+  updated() {
+    this.type = this.audience.type || '';
+  },
   watch: {
     type(val) {
       this.$emit('changeType', this.audience, val);
 
       this.typeObject = this.types.find(type => (type.value === val));
       this.getOptions(val);
+    },
+    values(val) {
+      this.audience.options = val;
     }
+
   },
   methods: {
+    changeTypeEvt(event){
+      this.values=[];
+      this.type = event.target.value;
+    },
     disabledType(type) {
       return Object.values(this.appTypes).includes(type.value)
     },
