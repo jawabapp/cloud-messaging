@@ -109,7 +109,6 @@ export default {
     },
     values(val) {
       this.audience.options = val;
-      console.log(val,'alaa')
     }
 
   },
