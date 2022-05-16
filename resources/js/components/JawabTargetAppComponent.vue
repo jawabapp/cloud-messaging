@@ -12,7 +12,7 @@
           </select>
         </div>
         <div class="col-md-2 text-left">
-          <a href="#" @click.prevent="and" class="btn btn-link">and</a>
+          <a href="#" @click.prevent="and" class="btn btn-link" :class="{ disabled : audiences.length == types.length }">and</a>
           <a href="#" @click.prevent="removeApp(app)" class="btn btn-link">remove</a>
         </div>
       </div>
@@ -21,7 +21,7 @@
           <jawab-target-app-row :os="os" :types="types" :filter-prefix-url="filterPrefixUrl" :audience-key="index" :app-key="appKey" :app="app" :audience="audience" :appTypes="appTypes" @changeType="changeType"/>
         </div>
         <div class="col-md-2 text-left">
-          <a href="#" @click.prevent="and" class="btn btn-link" v-if="audience < types.length">and</a>
+          <a href="#" @click.prevent="and" class="btn btn-link" :class="{ disabled : audiences.length == types.length }">and</a>
           <a href="#" @click.prevent="remove(audience)" class="btn btn-link">remove</a>
         </div>
       </div>
@@ -112,5 +112,7 @@ export default {
 </script>
 
 <style scoped>
-
+.disabled {
+  opacity: 0.4;
+}
 </style>
