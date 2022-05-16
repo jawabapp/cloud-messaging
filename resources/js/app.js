@@ -21,9 +21,7 @@ Vue.component("vue-json-pretty", VueJsonPretty);
 
 import {
   MultiSelectComponent,
-  MultiSelectPlugin,
-  DropDownListComponent,
-  DropDownListPlugin,
+  MultiSelectPlugin
 } from "@syncfusion/ej2-vue-dropdowns";
 
 import { MultiSelect, CheckBoxSelection } from "@syncfusion/ej2-dropdowns";
@@ -32,7 +30,6 @@ MultiSelect.Inject(CheckBoxSelection);
 Vue.use(MultiSelectPlugin);
 
 Vue.component(MultiSelectPlugin.name, MultiSelectComponent);
-Vue.component(DropDownListPlugin.name, DropDownListComponent);
 
 import {
   DateTimePickerComponent,

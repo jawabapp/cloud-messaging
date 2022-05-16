@@ -14,10 +14,9 @@
         </select>
       </div>
       <div class="col-md-4">
-        <template v-if="typeObject.type == 'MULTI_SELECT'">
           <ejs-multiselect
-              id='multiselect'
               class='audience'
+              :maximumSelectionLength="typeObject.type == 'SINGLE_SELECT' ? 1 : 1000"
               mode="CheckBox"
               :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
               :placeholder="`Select ${typeObject.selectLabel} ...`"
@@ -25,23 +24,10 @@
               :fields='fields'
               :allowFiltering='true'
               :showSelectAll='true'
-              v-model="values"
+              v-model="audience.options"
               selectAllText="Select All"
               unSelectAllText="unSelect All">
           </ejs-multiselect>
-        </template>
-        <template v-else-if="typeObject.type == 'SINGLE_SELECT'">
-            <ejs-dropdownlist
-              id='dropdownlist'
-              ref='dropdown'
-              :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
-              :placeholder="`Select ${typeObject.selectLabel} ...`"
-              :dataSource='options'
-              :fields='fields'
-              v-model="values"
-              :allowFiltering='true'>
-              </ejs-dropdownlist>
-        </template>
       </div>
     </template>
     <template v-else>
@@ -120,10 +106,16 @@ export default {
 
       this.typeObject = this.types.find(type => (type.value === val));
       this.getOptions(val);
+    },
+    values(val) {
+      this.audience.options = val;
+      console.log(val,'alaa')
     }
+
   },
   methods: {
     changeTypeEvt(event){
+      this.values=[];
       this.type = event.target.value;
     },
     disabledType(type) {
