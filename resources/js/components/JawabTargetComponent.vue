@@ -17,8 +17,13 @@
       <a href="#" @click.prevent="addApp" class="btn btn-primary">Target another audience</a>
       <a href="#" @click.prevent="checkCount" class="btn btn-outline-primary">refresh</a>
     </div>
+    <hr>
+    <div class="form-group">
+      <label for="limit" class="col-form-label text-md-right">Limit (optional)</label>
+      <input id="limit" v-model="limit" class="form-control" name="target[limit]" placeholder="limit as integer number" />
+    </div>
     <div v-if="audienceCount" class="alert alert-info mt-2" role="alert">
-      the targeted audience count is {{ audienceCount }}
+      the targeted audience count is {{ limit ? limit + '/' : '' }}{{ audienceCount }}
     </div>
   </div>
 </template>
@@ -51,6 +56,7 @@ export default {
   },
   mounted(){
     this.phone = this.targetAudience.phone;
+    this.limit = this.targetAudience.limit;
     this.ql = this.targetAudience.ql;
     this.apps = this.targetAudience.app ? Object.keys(this.targetAudience.app).map(
       (key)=>({[key]:this.targetAudience.app[key]})
@@ -60,6 +66,7 @@ export default {
     return {
       ql: '',
       phone: '',
+      limit: null,
       apps: [],
       audienceCount: 0,
     }
