@@ -61,7 +61,6 @@ trait HasTargetAudience
 
         $apps = $target['app'] ?? [];
         $phone = $target['phone'] ?? '';
-        $limit = (int) $target['limit'] ?? 0;
         $ql = $target['ql'] ?? '';
 
         $tableName = (new self)->getTable();
@@ -116,10 +115,6 @@ trait HasTargetAudience
                 });
             }
         });
-
-        if ($limit) {
-            $query->limit($limit);
-        }
 
         if ($isQuery) {
             return $query;
