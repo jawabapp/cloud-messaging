@@ -9,25 +9,27 @@
     </div>
     <template v-if="typeObject">
       <div class="col-md-4 border-right">
-        <select v-model="condition" :name="`target[app][${appKey}][and][${audienceKey}][condition]`" class="custom-select audience">
+        <select v-model="audience.condition" :name="`target[app][${appKey}][and][${audienceKey}][condition]`" class="custom-select audience">
           <option v-for="(condition,index) in typeObject.conditions" :key="index" :value="condition.value">{{condition.label}}</option>
         </select>
       </div>
+    </template>
+    <template v-if="audience.condition">
       <div class="col-md-4">
-          <ejs-multiselect
-              class='audience'
-              :maximumSelectionLength="typeObject.type == 'SINGLE_SELECT' ? 1 : 1000"
-              mode="CheckBox"
-              :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
-              :placeholder="`Select ${typeObject.selectLabel} ...`"
-              :dataSource='options'
-              :fields='fields'
-              :allowFiltering='true'
-              :showSelectAll='true'
-              v-model="audience.options"
-              selectAllText="Select All"
-              unSelectAllText="unSelect All">
-          </ejs-multiselect>
+        <ejs-multiselect
+            class='audience'
+            :maximumSelectionLength="typeObject.type == 'SINGLE_SELECT' ? 1 : 1000"
+            mode="CheckBox"
+            :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
+            :placeholder="`Select ${typeObject.selectLabel} ...`"
+            :dataSource='options'
+            :fields='fields'
+            :allowFiltering='true'
+            :showSelectAll='true'
+            v-model="audience.options"
+            selectAllText="Select All"
+            unSelectAllText="unSelect All">
+        </ejs-multiselect>
       </div>
     </template>
     <template v-else>
