@@ -13,25 +13,26 @@
           <option v-for="(condition,index) in typeObject.conditions" :key="index" :value="condition.value">{{condition.label}}</option>
         </select>
       </div>
+      <template v-if="audience.condition">
+        <div class="col-md-4">
+          <ejs-multiselect
+              class='audience'
+              :maximumSelectionLength="typeObject.type == 'SINGLE_SELECT' ? 1 : 1000"
+              mode="CheckBox"
+              :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
+              :placeholder="`Select ${typeObject.selectLabel} ...`"
+              :dataSource='options'
+              :fields='fields'
+              :allowFiltering='true'
+              :showSelectAll='true'
+              v-model="audience.options"
+              selectAllText="Select All"
+              unSelectAllText="unSelect All">
+          </ejs-multiselect>
+        </div>
+      </template>
     </template>
-    <template v-if="audience.condition">
-      <div class="col-md-4">
-        <ejs-multiselect
-            class='audience'
-            :maximumSelectionLength="typeObject.type == 'SINGLE_SELECT' ? 1 : 1000"
-            mode="CheckBox"
-            :name="`target[app][${appKey}][and][${audienceKey}][options][]`"
-            :placeholder="`Select ${typeObject.selectLabel} ...`"
-            :dataSource='options'
-            :fields='fields'
-            :allowFiltering='true'
-            :showSelectAll='true'
-            v-model="audience.options"
-            selectAllText="Select All"
-            unSelectAllText="unSelect All">
-        </ejs-multiselect>
-      </div>
-    </template>
+
     <template v-else>
       <div class="col-md-8"></div>
     </template>
@@ -107,7 +108,7 @@ export default {
       this.$emit('changeType', this.audience, val);
 
       this.typeObject = this.types.find(type => (type.value === val));
-      this.getOptions(val);
+     if (val != '') this.getOptions(val);
     },
     values(val) {
       this.audience.options = val;

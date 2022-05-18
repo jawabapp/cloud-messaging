@@ -21,7 +21,7 @@
           <jawab-target-app-row :os="os" :types="types" :filter-prefix-url="filterPrefixUrl" :audience-key="index" :app-key="appKey" :app="app" :audience="audience" :appTypes="appTypes" @changeType="changeType"/>
         </div>
         <div class="col-md-2 text-left">
-          <a v-if="audiences.length == index+1" href="#" @click.prevent="and" class="btn btn-link" :class="{ disabled : audiences.length == types.length }">and</a>
+          <a  href="#" @click.prevent="and" class="btn btn-link" :class="{ disabled : audiences.length == types.length || audiences.length != index+1 }">and</a>
           <a href="#" @click.prevent="remove(audience)" class="btn btn-link">remove</a>
         </div>
       </div>
