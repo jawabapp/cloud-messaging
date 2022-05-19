@@ -12,7 +12,7 @@
           </select>
         </div>
         <div class="col-md-2 text-left">
-          <a href="#" @click.prevent="and" class="btn btn-link" :class="{ disabled : audiences.length == types.length }">and</a>
+          <a href="#" v-if="audiences.length==0" @click.prevent="and" class="btn btn-link" :class="{ disabled : audiences.length == types.length }">and</a>
           <a href="#" @click.prevent="removeApp(app)" class="btn btn-link">remove</a>
         </div>
       </div>
@@ -21,7 +21,7 @@
           <jawab-target-app-row :os="os" :types="types" :filter-prefix-url="filterPrefixUrl" :audience-key="index" :app-key="appKey" :app="app" :audience="audience" :appTypes="appTypes" @changeType="changeType"/>
         </div>
         <div class="col-md-2 text-left">
-          <a href="#" @click.prevent="and" class="btn btn-link" :class="{ disabled : audiences.length == types.length }">and</a>
+          <a  href="#" @click.prevent="and" class="btn btn-link" :class="{ disabled : audiences.length == types.length || audiences.length != index+1 }">and</a>
           <a href="#" @click.prevent="remove(audience)" class="btn btn-link">remove</a>
         </div>
       </div>
@@ -83,8 +83,9 @@ export default {
       });
     },
     and() {
+
       if (this.audiences.filter(elm => {
-        return elm.type == undefined
+        return elm.options.length == 0
       }).length >0) return false;
       this.audiences.push({
         [Math.random()]:{}
