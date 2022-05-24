@@ -23,14 +23,12 @@ class FcmNotification
         }
 
         try {
-            $body = array_merge($message, ['registration_ids' => $tokens]);
-
             $response = $this->client->request('POST', 'https://fcm.googleapis.com/fcm/send', [
                     'headers' => [
                         'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
                         'Content-Type'  => 'application/json'
                     ],
-                    'body' => json_encode($body)
+                    'body' => json_encode($this->prepareBody($message, $tokens))
                 ]
             );
             return json_decode($response->getBody(), true);
@@ -39,58 +37,40 @@ class FcmNotification
         }
     }
 
-    public static function prepare(array $payload, $asData = false, $silent = false)
+    private function prepareBody(array $message, array $tokens)
     {
 
-        $expiration = Carbon::today()->addDays(7);
-
-        $rawMessage = [
-            'android' => [
-                'ttl' => '604800s',
-                'priority' => 'high',
-            ],
-            'apns' => [
-                'headers' => [
-                    'apns-priority' => '10',
-                    'apns-expiration' => "{$expiration}"
-                ],
-                'payload' => [
-                    'aps' => [
-                        'mutable-content' => 1,
-                    ],
-                ],
-            ],
+        $payload = [
+            'registration_ids' => $tokens,
+            'priority' => $message['priority'] ?? 'high',
         ];
 
-        if ($silent) {
-            $rawMessage['apns']['payload']['aps']['content-available'] = 1;
+        if (isset($message['mutable_content'])) {
+            $payload['mutable_content'] = $message['mutable_content'];
         } else {
-            $rawMessage['apns']['payload']['aps']['sound'] = 'default';
-            $rawMessage['apns']['payload']['aps']['badge'] = 1;
-            if ($asData) {
-                $rawMessage['apns']['payload']['aps']['alert'] = [
-                    'title' => 'Jawab'
-                ];
-            }
+            $payload['mutable_content'] = true;
         }
 
-        if (!empty($payload['data']) && is_array($payload['data'])) {
-            $rawMessage['data'] = $payload['data'];
-            unset($payload['data']);
-        }
-
-        if (isset($payload['notification_id'])) {
-            $rawMessage['data']['notification_id'] = $payload['notification_id'];
-            unset($payload['notification_id']);
-        }
-
-        if ($asData) {
-            $rawMessage['data']['payload'] = json_encode($payload);
+        if (isset($message['content_available']) && $message['content_available']) {
+            $payload['content_available'] = true;
         } else {
-            $rawMessage['notification'] = $payload;
+            $payload['notification'] = [
+                'title' => $message['notification']['title'] ?? $message['title'] ?? null,
+                'body' => $message['notification']['body'] ?? $message['body'] ?? null,
+                'image' => $message['notification']['image'] ?? $message['image'] ?? null,
+                'sound' => 'default',
+            ];
         }
 
-        return $rawMessage;
+        if (!empty($message['data'])) {
+            $payload['data'] = $message['data'];
+        }
+
+        if (!empty($message['notification_id'])) {
+            $payload['data']['notification_id'] = $message['notification_id'];
+        }
+
+        return $payload;
     }
 
     public static function sendMessage($message, Collection $dataTokens, $type = null, $sender = null): array

@@ -38,14 +38,13 @@ class RePushNotificationCommand extends Command
 
                 $response = collect();
 
-                $payload = [
+                $message = [
                     'image' => $notification->image,
                     'body' => $notification->text,
                     'title' => $notification->title,
                     'data' => $notification->extra_info,
+                    'notification_id' => $notification->id,
                 ];
-
-                $message = FcmNotification::prepare($payload);
 
                 try {
                     $users = $notifiable_model::getJawabTargetAudience($notification->target, false, true);

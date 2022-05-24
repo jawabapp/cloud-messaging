@@ -125,8 +125,7 @@ class PushNotificationJob implements ShouldQueue
 
             try {
                 $sender = $this->notification->id;
-
-                $message = FcmNotification::prepare($this->payload);
+                $message = $this->payload;
 
                 $users = $this->model::getJawabTargetAudience($this->notification->target, false, true);
 
