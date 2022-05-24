@@ -58,6 +58,7 @@ class FcmNotification
                 'title' => $message['notification']['title'] ?? $message['title'] ?? null,
                 'body' => $message['notification']['body'] ?? $message['body'] ?? null,
                 'image' => $message['notification']['image'] ?? $message['image'] ?? null,
+                'badge' => $message['notification']['badge'] ?? $message['badge'] ?? 1,
                 'sound' => 'default',
             ];
         }
