@@ -143,7 +143,7 @@ class NotificationController extends Controller
     public function report()
     {
 
-        $start = Carbon::now()->subWeeks(1);
+        $start = Carbon::now()->subWeeks(2);
         $end = Carbon::now();
 
         $items = Notification::whereBetween('created_at', array($start, $end))->latest()->get();
