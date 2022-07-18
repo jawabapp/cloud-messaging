@@ -68,24 +68,14 @@ class PushNotificationScheduledJob implements ShouldQueue
             ]);
 
             $response = collect();
+            $message = $this->payload;
+            $wheres = [];
 
-            try {
-                $sender = $this->notification->id;
-                $message = $this->payload;
-
-                $users = $this->model::getJawabTargetAudience($this->notification->target, false, true);
-
-                if ($this->country_code) {
-                    $users->where(config('cloud-messaging.country_code_column'), $this->country_code);
-                }
-
-                $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
-                    $apiResponse = FcmNotification::sendMessage($message, $chunked, 'cloud-message', $sender);
-                    $response->push($apiResponse[0]['api_response']);
-                });
-            } catch (\Exception $exception) {
-                $this->error("[PushNotificationJob] send-notification " . $exception->getMessage());
+            if ($this->country_code) {
+                $wheres[config('cloud-messaging.country_code_column')] = $this->country_code;
             }
+
+            FcmNotification::sendNotification($this->notification, $response, $message, $wheres);
 
             $success = 0;
             $failure = 0;

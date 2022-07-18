@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
 use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
+use Jawabapp\CloudMessaging\Models\Notification;
 
 class FcmNotification
 {
@@ -21,6 +22,8 @@ class FcmNotification
         if (!$tokens) {
             return 'Fcm_Notification (No Tokens)';
         }
+
+        info('FcmNotification send title:' . $message['title'] . ' body:' . $message['body'] . ' tokens counts:' . count($tokens));
 
         try {
             $response = $this->client->request('POST', 'https://fcm.googleapis.com/fcm/send', [
@@ -108,5 +111,37 @@ class FcmNotification
         }
         return $response;
 
+    }
+
+    public static function sendNotification(Notification $notification, Collection $response, $message, $wheres = []){
+        if($notifiable_model = config('cloud-messaging.notifiable_model')) {
+            try {
+                $sender = $notification->id ?? 0;
+                $target = $notification->target ?? [];
+                $limit = intval($target['limit'] ?? 0);
+
+                $users = $notifiable_model::getJawabTargetAudience($target, false, true);
+
+                if ($wheres) {
+                    foreach ($wheres as $where_column => $where_value) {
+                        $users->where($where_column, $where_value);
+                    }
+                }
+
+                if($limit > 0) {
+                    foreach($users->get()->chunk(500) as $chunked) {
+                        $apiResponse = self::sendMessage($message, $chunked, 'cloud-message', $sender);
+                        $response->push($apiResponse[0]['api_response']);
+                    }
+                } else {
+                    $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
+                        $apiResponse = self::sendMessage($message, $chunked, 'cloud-message', $sender);
+                        $response->push($apiResponse[0]['api_response']);
+                    });
+                }
+            } catch (\Exception $exception) {
+                error("[PushNotificationJob] send-notification " . $exception->getMessage());
+            }
+        }
     }
 }

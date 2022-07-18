@@ -53,6 +53,11 @@ trait HasTargetAudience
             }
         }
 
+        $limit = intval($target['limit'] ?? 0);
+        if($limit > 0) {
+            $targetString .= " limit {$limit}";
+        }
+
         return $targetString;
     }
 
@@ -62,10 +67,15 @@ trait HasTargetAudience
         $apps = $target['app'] ?? [];
         $phone = $target['phone'] ?? '';
         $ql = $target['ql'] ?? '';
+        $limit = intval($target['limit'] ?? 0);
 
         $tableName = (new self)->getTable();
 
         $query = self::select($tableName . '.*')->distinct();
+
+        if($limit > 0) {
+            $query->limit($limit);
+        }
 
         //TODO: check inactive users
         // $query->whereNull('inactive_at');
