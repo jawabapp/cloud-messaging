@@ -5,6 +5,7 @@ namespace Jawabapp\CloudMessaging\Notifications;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
 use Jawabapp\CloudMessaging\Models\Notification;
 
@@ -22,8 +23,6 @@ class FcmNotification
         if (!$tokens) {
             return 'Fcm_Notification (No Tokens)';
         }
-
-        info('FcmNotification send title:' . $message['title'] . ' body:' . $message['body'] . ' tokens counts:' . count($tokens));
 
         try {
             $response = $this->client->request('POST', 'https://fcm.googleapis.com/fcm/send', [
@@ -140,7 +139,7 @@ class FcmNotification
                     });
                 }
             } catch (\Exception $exception) {
-                error("[PushNotificationJob] send-notification " . $exception->getMessage());
+                Log::error("[PushNotificationJob] send-notification " . $exception->getMessage());
             }
         }
     }
