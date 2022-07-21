@@ -20,8 +20,19 @@ class NotificationController extends Controller
 
     public function index(Request $request)
     {
-        $notifications = Notification::with('user')->latest()->paginate(10);
-        return view('cloud-messaging::notifications.index')->with('data', $notifications);
+        $query = Notification::with('user')->latest();
+
+        collect($request->get('fltr'))
+            ->only(array_merge(['name', 'conversion'], array_keys(config('cloud-messaging.extra_info', []))))
+            ->each(function ($value, $column) use ($query) {
+                if($value) {
+                    $query->whereRaw("extra_info->>'$.{$column}' = ?", $value);
+                }
+            });
+
+        $data = $query->paginate(10);
+
+        return view('cloud-messaging::notifications.index', compact('data'));
     }
 
     public function compose(Request $request, ?Notification $notification = null)

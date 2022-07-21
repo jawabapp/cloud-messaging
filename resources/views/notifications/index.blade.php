@@ -14,6 +14,40 @@
                 </div>
             </div>
         </div>
+        <div class="card-body pb-0">
+            <form>
+                <div class="jumbotron m-0 p-4">
+                    <div class="row">
+
+                        @php
+                            $config_extra_fields = config('cloud-messaging.extra_info', []);
+                            $config_extra_fields = is_array($config_extra_fields) ? $config_extra_fields : [];
+
+                            $old_extra_fields = old('extra_info', ($notification->extra_info ?? null));
+                            $old_extra_fields = is_array($old_extra_fields) ? $old_extra_fields : [];
+
+                            $extra_fields = array_merge(['name' => '', 'conversion' => ''], $config_extra_fields, $old_extra_fields);
+                        @endphp
+
+                        @foreach($extra_fields as $extra_field_name => $extra_field_value)
+                            <div class="col-md-4">
+                                <input type="text" class="form-control mb-2" name="fltr[{{ $extra_field_name }}]" value="{{ request('fltr')[$extra_field_name] ?? '' }}" placeholder="filter by {{ $extra_field_name }}">
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-md-6 text-left">
+                            <div class="py-2"><b>Count</b> : {{ $data->total() }}</div>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-info"><i class="fa fa-search"></i> Search</button>
+                            <a href="{{ url()->current() }}" class="btn btn-info"><i class="fa fa-refresh"></i> Reset</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
         <div class="card-body">
             @if($data->items())
                 <table class="table table-striped table-bordered">
