@@ -95,52 +95,68 @@ class FcmNotification
 
         // remove empty and duplicate
         $tokens = $tokens->filter(function ($value) { return !is_null($value); })->unique()->values();
+
         if($tokens) {
 
             $client = (new self);
+            $sent_at = now()->toDateTimeString();
 
             foreach ($tokens->chunk(500) as $chunkId => $chunk) {
                 $fcm_tokens = $chunk->all();
-                $response[$chunkId]['sent_at'] = now()->toDateTimeString();
+                $response[$chunkId]['sent_at'] = $sent_at;
                 $response[$chunkId]['fcm_tokens'] = $fcm_tokens;
                 $response[$chunkId]['api_response'] = $client->send($message, $fcm_tokens);
             }
 
             FCMNotificationSent::dispatch($message, $response, $type, $sender);
         }
+
         return $response;
 
     }
 
-    public static function sendNotification(Notification $notification, Collection $response, $message, $wheres = []){
+    public static function sendNotification(Notification $notification, $message, $wheres = []) :array
+    {
+
+        $success = 0;
+        $failure = 0;
+
         if($notifiable_model = config('cloud-messaging.notifiable_model')) {
             try {
                 $sender = $notification->id ?? 0;
                 $target = $notification->target ?? [];
-                $limit = intval($target['limit'] ?? 0);
 
-                $users = $notifiable_model::getJawabTargetAudience($target, false, true);
+                $callable = function ($userTokens) use ($message, $sender, &$success, &$failure) {
+                    $response = self::sendMessage($message, $userTokens, 'cloud-message', $sender);
+
+                    $success += intval($response[0]['api_response']['success'] ?? 0);
+                    $failure += intval($response[0]['api_response']['failure'] ?? 0);
+                };
+
+                $query = $notifiable_model::getJawabTargetAudience($target, false, true);
 
                 if ($wheres) {
                     foreach ($wheres as $where_column => $where_value) {
-                        $users->where($where_column, $where_value);
+                        if($where_column && $where_value) {
+                            $query->where($where_column, $where_value);
+                        }
                     }
                 }
 
-                if($limit > 0) {
-                    foreach($users->get()->chunk(500) as $chunked) {
-                        $apiResponse = self::sendMessage($message, $chunked, 'cloud-message', $sender);
-                        $response->push($apiResponse[0]['api_response']);
-                    }
+                if(isset($target['limit']) && intval($target['limit']) > 0) {
+                    $query->get()->chunk(500)->each($callable);
                 } else {
-                    $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
-                        $apiResponse = self::sendMessage($message, $chunked, 'cloud-message', $sender);
-                        $response->push($apiResponse[0]['api_response']);
-                    });
+                    $query->chunk(500, $callable);
                 }
+
             } catch (\Exception $exception) {
                 Log::error("[PushNotificationJob] send-notification " . $exception->getMessage());
             }
         }
+
+        return [
+            'success' => $success,
+            'failure' => $failure,
+        ];
     }
 }

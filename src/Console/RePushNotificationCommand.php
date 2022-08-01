@@ -29,12 +29,10 @@ class RePushNotificationCommand extends Command
      */
     public function handle()
     {
-        if($notifiable_model = config('cloud-messaging.notifiable_model')) {
+        if(config('cloud-messaging.notifiable_model')) {
             $notification = Notification::find($this->argument('id'));
 
             if($notification && $notification->status !== 'completed') {
-
-                $response = collect();
 
                 $message = [
                     'image' => $notification->image,
@@ -44,20 +42,10 @@ class RePushNotificationCommand extends Command
                     'notification_id' => $notification->id,
                 ];
 
-                FcmNotification::sendNotification($notification, $response, $message);
-
-                $success = 0;
-                $failure = 0;
-                $response->each(function ($item) use (&$success, &$failure) {
-                    $success += intval($item['success'] ?? 0);
-                    $failure += intval($item['failure'] ?? 0);
-                });
+                $response = FcmNotification::sendNotification($notification, $message);
 
                 $notification->update([
-                    'response' => [
-                        'success' => $success,
-                        'failure' => $failure,
-                    ],
+                    'response' => $response,
                     'status' => 'completed'
                 ]);
 

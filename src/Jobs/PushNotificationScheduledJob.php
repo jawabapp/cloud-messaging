@@ -67,7 +67,6 @@ class PushNotificationScheduledJob implements ShouldQueue
                 'status' => 'processing'
             ]);
 
-            $response = collect();
             $message = $this->payload;
             $wheres = [];
 
@@ -75,19 +74,12 @@ class PushNotificationScheduledJob implements ShouldQueue
                 $wheres[config('cloud-messaging.country_code_column')] = $this->country_code;
             }
 
-            FcmNotification::sendNotification($this->notification, $response, $message, $wheres);
-
-            $success = 0;
-            $failure = 0;
-            $response->each(function ($item) use (&$success, &$failure) {
-                $success += intval($item['success'] ?? 0);
-                $failure += intval($item['failure'] ?? 0);
-            });
+            $response = FcmNotification::sendNotification($this->notification, $message, $wheres);
 
             $this->notification->update([
                 'response' => [
-                    'success' => ($this->notification->response['success'] ?? 0) + $success,
-                    'failure' => ($this->notification->response['failure'] ?? 0) + $failure,
+                    'success' => ($this->notification->response['success'] ?? 0) + $response['success'],
+                    'failure' => ($this->notification->response['failure'] ?? 0) + $response['failure'],
                 ],
             ]);
 

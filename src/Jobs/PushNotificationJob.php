@@ -121,23 +121,12 @@ class PushNotificationJob implements ShouldQueue
                 'status' => 'processing'
             ]);
 
-            $response = collect();
             $message = $this->payload;
 
-            FcmNotification::sendNotification($this->notification, $response, $message);
-
-            $success = 0;
-            $failure = 0;
-            $response->each(function ($item) use (&$success, &$failure) {
-                $success += intval($item['success'] ?? 0);
-                $failure += intval($item['failure'] ?? 0);
-            });
+            $response = FcmNotification::sendNotification($this->notification, $message);
 
             $this->notification->update([
-                'response' => [
-                    'success' => $success,
-                    'failure' => $failure,
-                ],
+                'response' => $response,
                 'status' => 'completed'
             ]);
 
