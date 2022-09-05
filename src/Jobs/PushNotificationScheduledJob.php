@@ -80,6 +80,11 @@ class PushNotificationScheduledJob implements ShouldQueue
                     $users->where(config('cloud-messaging.country_code_column'), $this->country_code);
                 }
 
+                // This will be sending a custom notifications based on the project using the library.
+                if(method_exists($this->model, 'sendCustomConditionNotifications')) {
+                    $this->model->sendCustomConditionNotifications($this->notification, $users);
+                }
+                
                 $users->chunk(500, function ($chunked) use ($message, $response, $sender) {
                     $apiResponse = FcmNotification::sendMessage($message, $chunked, 'cloud-message', $sender);
                     $response->push($apiResponse[0]['api_response']);
