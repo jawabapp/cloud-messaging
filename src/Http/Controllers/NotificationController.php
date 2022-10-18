@@ -228,6 +228,8 @@ class NotificationController extends Controller
 
         $targetAudienceString = config('cloud-messaging.notifiable_model')::getJawabTargetAudienceString($item->target);
 
+        $limit = intval($item->target['limit'] ?? 0);
+
         $data->push([
             'id' => $item->id,
             'title' => $item->title,
@@ -235,7 +237,7 @@ class NotificationController extends Controller
             'sent_by' => $item->user->name ?? '',
             'created' => $item->created_at->toDateString(),
             'target' => $targetAudienceString,
-            'audience' => $item->campaign['tokens_count'] ?? 0,
+            'audience' => $limit ? $limit : ($item->campaign['tokens_count'] ?? 0),
             'sends' => $item->response['success'] ?? 0,
             'opens' => $openCount['counts'] ?? 0,
             'conversions' => $conversionCount['counts'] ?? 0,
