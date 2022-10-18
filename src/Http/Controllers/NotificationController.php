@@ -168,7 +168,7 @@ class NotificationController extends Controller
         $cohort = $data->groupBy('created')->map(function ($row) {
             return [
                 'counts' => $row->count(),
-                'audience' => $row->sum('audience'),
+                'audience' => $row->sum('limit_audience'),
                 'sends' => $row->sum('sends'),
                 'opens' => $row->sum('opens'),
                 'conversions' => $row->sum('conversions'),
@@ -237,7 +237,9 @@ class NotificationController extends Controller
             'sent_by' => $item->user->name ?? '',
             'created' => $item->created_at->toDateString(),
             'target' => $targetAudienceString,
-            'audience' => $limit ? $limit : ($item->campaign['tokens_count'] ?? 0),
+            'audience' => $item->campaign['tokens_count'] ?? 0,
+            'limit' => $limit,
+            'limit_audience' => $limit ? $limit : ($item->campaign['tokens_count'] ?? 0),
             'sends' => $item->response['success'] ?? 0,
             'opens' => $openCount['counts'] ?? 0,
             'conversions' => $conversionCount['counts'] ?? 0,

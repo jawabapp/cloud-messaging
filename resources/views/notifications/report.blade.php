@@ -38,7 +38,7 @@
                             <div>Target: {{ $item['target'] }}</div>
                         </td>
                         <td>{{ $item['created'] }}</td>
-                        <td>{{ $item['audience'] }}</td>
+                        <td>{{ $item['limit'] ? ($item['limit'] . '/' . $item['audience']) : $item['audience'] }}</td>
                         <td>{{ $item['sends'] }}</td>
                         <td>{{ $item['opens'] }}</td>
                         <td>{{ $item['conversions'] }}</td>
