@@ -59,6 +59,7 @@ class FcmNotification
             $payload['notification'] = [
                 'title' => $message['notification']['title'] ?? $message['title'] ?? null,
                 'body' => $message['notification']['body'] ?? $message['body'] ?? null,
+                'subtitle' => $message['notification']['subtitle'] ?? $message['subtitle'] ?? null,
                 'image' => $message['notification']['image'] ?? $message['image'] ?? null,
                 'badge' => $message['notification']['badge'] ?? $message['badge'] ?? 1,
                 'sound' => 'default',
