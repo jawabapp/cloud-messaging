@@ -43,9 +43,9 @@ class NotificationController extends Controller
     public function send(Request $request)
     {
         $this->validate($request, [
-            'extra_info.name' => 'required|string|max:140',
+            'extra_info.name' => 'string|max:140',
             'title' => 'nullable|string|max:140',
-            'text' => 'required|string|max:240',
+            'text' => 'string|max:240',
             'image' => 'image|mimetypes:' . config('cloud-messaging.image_mimetypes') . '|max:300',
             'target' => 'required|array',
             'target.phone' => 'nullable|string',
