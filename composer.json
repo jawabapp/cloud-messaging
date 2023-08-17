@@ -25,5 +25,10 @@
         "guzzlehttp/guzzle": "^6.3",
         "nesbot/carbon": "^1.39.1",
         "google/cloud-bigquery": "^1.12"
+    },
+    "config": {
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
     }
 }

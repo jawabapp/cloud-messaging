@@ -4,6 +4,7 @@ namespace Jawabapp\CloudMessaging\Notifications;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
@@ -24,54 +25,72 @@ class FcmNotification
             return 'Fcm_Notification (No Tokens)';
         }
 
-        try {
-            $response = $this->client->request('POST', 'https://fcm.googleapis.com/fcm/send', [
-                    'headers' => [
-                        'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
-                        'Content-Type'  => 'application/json'
-                    ],
-                    'body' => json_encode($this->prepareBody($message, $tokens))
-                ]
-            );
-            return json_decode($response->getBody(), true);
-        } catch (\Exception $e) {
-            return 'Fcm_Notification (' . $e->getMessage() . ')';
-        }
-    }
-
-    private function prepareBody(array $message, array $tokens)
-    {
-
-        $payload = [
-            'registration_ids' => $tokens,
-            'priority' => $message['priority'] ?? 'high',
+        $api_response = [
+            "multicast_id" => null,
+            "success" => 0,
+            "failure" => 0,
+            "canonical_ids" => 0,
+            "results" => []
         ];
 
-        if (isset($message['mutable_content'])) {
-            $payload['mutable_content'] = $message['mutable_content'];
-        } else {
-            $payload['mutable_content'] = true;
+        foreach ($tokens as $token) {
+            try {
+                $firebase_project_id = env('FIREBASE_PROJECT_ID');
+
+                $response = $this->client->post("https://fcm.googleapis.com/v1/projects/{$firebase_project_id}/messages:send", [
+                        'headers' => [
+                            'Authorization' => 'Bearer ' . env('FIREBASE_BEARER_TOKEN'),
+                            'Content-Type'  => 'application/json'
+                        ],
+                        'body' => json_encode($this->prepareBody($message, $token))
+                    ]
+                );
+
+                $res = json_decode($response->getBody(), true);
+
+                $api_response['success'] += 1;
+                $api_response['results'][] = [
+                    "message_id" => str_replace("projects/{$firebase_project_id}/messages/", '', $res['name'] ?? '')
+                ];
+            } catch (ClientException $e) {
+
+                //to handel 401 UNAUTHENTICATED
+
+                $res = json_decode($e->getResponse()->getBody(), true);
+
+                $api_response['failure'] += 1;
+                $api_response['results'][] = [
+                    "error" => $res['error']['details'][0]['errorCode'] ?? $res['error']['status'] ?? 'UNKNOWN'
+                ];
+            }
         }
 
-        if (isset($message['content_available']) && $message['content_available']) {
-            $payload['content_available'] = true;
-        } else {
-            $payload['notification'] = [
+        return $api_response;
+    }
+
+    private function prepareBody(array $message, string $token)
+    {
+        $payload['message'] = [
+            "token" => $token,
+            "fcm_options" => [
+                "analytics_label" => uniqid()
+            ]
+        ];
+
+        if (!(isset($message['content_available']) && $message['content_available'])) {
+            $payload['message']['notification'] = [
                 'title' => $message['notification']['title'] ?? $message['title'] ?? null,
                 'body' => $message['notification']['body'] ?? $message['body'] ?? null,
-                'subtitle' => $message['notification']['subtitle'] ?? $message['subtitle'] ?? null,
                 'image' => $message['notification']['image'] ?? $message['image'] ?? null,
-                'badge' => $message['notification']['badge'] ?? $message['badge'] ?? 1,
-                'sound' => 'default',
             ];
         }
 
         if (!empty($message['data'])) {
-            $payload['data'] = $message['data'];
+            $payload['message']['data'] = $message['data'];
         }
 
         if (!empty($message['notification_id'])) {
-            $payload['data']['notification_id'] = $message['notification_id'];
+            $payload['message']['data']['notification_id'] = $message['notification_id'];
         }
 
         return $payload;
