@@ -37,12 +37,14 @@ class FcmNotification
             try {
                 $firebase_project_id = env('FIREBASE_PROJECT_ID');
 
+                $body = $this->prepareBody($message, $token);
+
                 $response = $this->client->post("https://fcm.googleapis.com/v1/projects/{$firebase_project_id}/messages:send", [
                         'headers' => [
                             'Authorization' => 'Bearer ' . env('FIREBASE_BEARER_TOKEN'),
                             'Content-Type'  => 'application/json'
                         ],
-                        'body' => json_encode($this->prepareBody($message, $token))
+                        'body' => json_encode($body)
                     ]
                 );
 
@@ -50,7 +52,8 @@ class FcmNotification
 
                 $api_response['success'] += 1;
                 $api_response['results'][] = [
-                    "message_id" => str_replace("projects/{$firebase_project_id}/messages/", '', $res['name'] ?? '')
+                    "message_id" => str_replace("projects/{$firebase_project_id}/messages/", '', $res['name'] ?? ''),
+                    "analytics_label" => $body['message']['fcm_options']['analytics_label'] ?? null
                 ];
             } catch (ClientException $e) {
 
