@@ -36,17 +36,25 @@ class FcmNotification
                 $token = $client->fetchAccessTokenWithAssertion();
             }
 
-            $firebaseAuth = [
+            $auth = [
                 'project_id' => $config['project_id'] ?? null,
-                'access_token' => $token['access_token'] ?? null
+                'token' => $token ?? null
             ];
 
-            cache()->put($key, $firebaseAuth, $token['expires_in'] ?? 0);
+            cache()->put($key, $auth, $token['expires_in'] ?? 0);
         } else {
-            $firebaseAuth = cache()->get($key);
+            $auth = cache()->get($key);
+
+            $client = new Google_Client();
+            $client->setAccessToken($auth['token']);
+
+            if($client->isAccessTokenExpired()) {
+                cache()->forget($key);
+                return $this->getFirebaseAuth();
+            }
         }
 
-        return $firebaseAuth;
+        return $auth;
 
     }
 
@@ -72,7 +80,7 @@ class FcmNotification
 
                 $response = $this->client->post("https://fcm.googleapis.com/v1/projects/{$auth['project_id']}/messages:send", [
                         'headers' => [
-                            'Authorization' => "Bearer {$auth['access_token']}",
+                            'Authorization' => "Bearer {$auth['token']['access_token']}",
                             'Content-Type'  => 'application/json'
                         ],
                         'body' => json_encode($body)
@@ -104,7 +112,7 @@ class FcmNotification
         $payload['message'] = [
             "token" => $token,
             "fcm_options" => [
-                "analytics_label" => uniqid()
+                "analytics_label" => (isset($message['analytics_label_prefix']) ? "{$message['analytics_label_prefix']}-" : "") . uniqid()
             ]
         ];
 
