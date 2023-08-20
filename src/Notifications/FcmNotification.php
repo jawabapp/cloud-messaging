@@ -26,7 +26,7 @@ class FcmNotification
         $key = 'cloud-massaging:firebase-messaging-auth';
 
         if (!cache()->has($key)) {
-            $authConfigPath = storage_path(env('FIREBASE_SERVER_APPLICATION_CREDENTIALS'));
+            $authConfigPath = storage_path(env('FIREBASE_APPLICATION_CREDENTIALS'));
 
             if(file_exists($authConfigPath)) {
                 $config = json_decode(file_get_contents($authConfigPath),true);
@@ -43,7 +43,7 @@ class FcmNotification
 
                 cache()->put($key, $auth, $token['expires_in']);
             } else {
-                die('Error no FIREBASE_SERVER_APPLICATION_CREDENTIALS in the .env file');
+                die('Error no FIREBASE_APPLICATION_CREDENTIALS in the .env file');
             }
         } else {
             $auth = cache()->get($key);
