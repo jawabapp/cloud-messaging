@@ -21,6 +21,8 @@ class FcmNotification
 
     private function getFirebaseAuth() {
 
+        $client = new Google_Client();
+
         $key = 'cloud-massaging:firebase-messaging-auth';
 
         if (!cache()->has($key)) {
@@ -29,7 +31,6 @@ class FcmNotification
             if(file_exists($authConfigPath)) {
                 $config = json_decode(file_get_contents($authConfigPath),true);
 
-                $client = new Google_Client();
                 $client->setAuthConfig($authConfigPath);
                 $client->setScopes(['https://www.googleapis.com/auth/firebase.messaging']);
 
@@ -45,7 +46,6 @@ class FcmNotification
         } else {
             $auth = cache()->get($key);
 
-            $client = new Google_Client();
             $client->setAccessToken($auth['token']);
 
             if($client->isAccessTokenExpired()) {
