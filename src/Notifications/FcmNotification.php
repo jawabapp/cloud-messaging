@@ -2,7 +2,7 @@
 
 namespace Jawabapp\CloudMessaging\Notifications;
 
-use Carbon\Carbon;
+use Google_Client;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Collection;
@@ -17,6 +17,37 @@ class FcmNotification
     public function __construct()
     {
         $this->client = new Client();
+    }
+
+    private function getFirebaseAuth() {
+
+        $key = 'cloud-massaging:firebase-messaging-auth';
+
+        if (!cache()->has($key)) {
+            $authConfigPath = storage_path(env('FIREBASE_SERVER'));
+
+            if(file_exists($authConfigPath)) {
+                $config = json_decode(file_get_contents($authConfigPath),true);
+
+                $client = new Google_Client();
+                $client->setAuthConfig($authConfigPath);
+                $client->setScopes(['https://www.googleapis.com/auth/firebase.messaging']);
+
+                $token = $client->fetchAccessTokenWithAssertion();
+            }
+
+            $firebaseAuth = [
+                'project_id' => $config['project_id'] ?? null,
+                'access_token' => $token['access_token'] ?? null
+            ];
+
+            cache()->put($key, $firebaseAuth, $token['expires_in'] ?? 0);
+        } else {
+            $firebaseAuth = cache()->get($key);
+        }
+
+        return $firebaseAuth;
+
     }
 
     private function send($message, array $tokens)
@@ -35,13 +66,13 @@ class FcmNotification
 
         foreach ($tokens as $token) {
             try {
-                $firebase_project_id = env('FIREBASE_PROJECT_ID');
+                $auth = $this->getFirebaseAuth();
 
                 $body = $this->prepareBody($message, $token);
 
-                $response = $this->client->post("https://fcm.googleapis.com/v1/projects/{$firebase_project_id}/messages:send", [
+                $response = $this->client->post("https://fcm.googleapis.com/v1/projects/{$auth['project_id']}/messages:send", [
                         'headers' => [
-                            'Authorization' => 'Bearer ' . env('FIREBASE_BEARER_TOKEN'),
+                            'Authorization' => "Bearer {$auth['access_token']}",
                             'Content-Type'  => 'application/json'
                         ],
                         'body' => json_encode($body)
@@ -52,13 +83,10 @@ class FcmNotification
 
                 $api_response['success'] += 1;
                 $api_response['results'][] = [
-                    "message_id" => str_replace("projects/{$firebase_project_id}/messages/", '', $res['name'] ?? ''),
+                    "message_id" => str_replace("projects/{$auth['project_id']}/messages/", '', $res['name'] ?? ''),
                     "analytics_label" => $body['message']['fcm_options']['analytics_label'] ?? null
                 ];
             } catch (ClientException $e) {
-
-                //to handel 401 UNAUTHENTICATED
-
                 $res = json_decode($e->getResponse()->getBody(), true);
 
                 $api_response['failure'] += 1;
