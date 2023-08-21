@@ -74,14 +74,7 @@ class PushNotificationScheduledJob implements ShouldQueue
                 $wheres[config('cloud-messaging.country_code_column')] = $this->country_code;
             }
 
-            $response = FcmNotification::sendNotification($this->notification, $message, $wheres);
-
-            $this->notification->update([
-                'response' => [
-                    'success' => ($this->notification->response['success'] ?? 0) + $response['success'],
-                    'failure' => ($this->notification->response['failure'] ?? 0) + $response['failure'],
-                ],
-            ]);
+            FcmNotification::sendNotification($this->notification, $message, $wheres);
 
             $notification_job_ids = $this->notification->schedule['job_ids'] ?? [];
 
