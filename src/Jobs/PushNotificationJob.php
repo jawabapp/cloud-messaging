@@ -125,10 +125,6 @@ class PushNotificationJob implements ShouldQueue
 
             FcmNotification::sendNotification($this->notification, $message);
 
-            $this->notification->update([
-                'status' => 'completed'
-            ]);
-
             Log::info("[PushNotificationJob] send notification end");
         } catch (\Exception $exception) {
             \Log::info('Error: [PushNotificationJob] File: ' . $exception->getFile() . ' Line: ' . $exception->getLine() . ' Message: ' . $exception->getMessage());

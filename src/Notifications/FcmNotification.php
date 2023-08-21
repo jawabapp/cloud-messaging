@@ -10,7 +10,7 @@ use Jawabapp\CloudMessaging\Models\Notification;
 class FcmNotification
 {
 
-    public static function sendMessage($message, Collection $fcmTokens, $type = null, $sender = null): void
+    public static function sendMessage($message, Collection $fcmTokens, $type = null, $sender = null, Notification $notification = null): void
     {
 
         $tokens = $fcmTokens->pluck('fcm_token');
@@ -31,7 +31,7 @@ class FcmNotification
         if($tokens) {
             $sent_at = now()->toDateTimeString();
             foreach ($tokens->chunk(500) as $chunkId => $chunk) {
-                SendNotificationJob::dispatch($message, $chunk->all(), $sent_at, $type, $sender);
+                SendNotificationJob::dispatch($message, $chunk->all(), $sent_at, $type, $sender, $notification)->onQueue('cloud-message');
             }
         }
     }
@@ -43,8 +43,8 @@ class FcmNotification
                 $sender = $notification->id ?? 0;
                 $target = $notification->target ?? [];
 
-                $callable = function ($userTokens) use ($message, $sender) {
-                    self::sendMessage($message, $userTokens, 'cloud-message', $sender);
+                $callable = function ($userTokens) use ($message, $sender, $notification) {
+                    self::sendMessage($message, $userTokens, 'cloud-message', $sender, $notification);
                 };
 
                 $query = $notifiable_model::getJawabTargetAudience($target, false, true);

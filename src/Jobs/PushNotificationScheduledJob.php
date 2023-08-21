@@ -120,9 +120,8 @@ class PushNotificationScheduledJob implements ShouldQueue
 
     protected function markNotificationAsCompleted()
     {
-        $this->notification
-            ->update([
-                'status' => 'completed'
-            ]);
+        $this->notification->update([
+            'status' => 'completed'
+        ]);
     }
 }

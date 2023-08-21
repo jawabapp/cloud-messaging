@@ -44,10 +44,6 @@ class RePushNotificationCommand extends Command
 
                 FcmNotification::sendNotification($notification, $message);
 
-                $notification->update([
-                    'status' => 'completed'
-                ]);
-
             }
         }
     }

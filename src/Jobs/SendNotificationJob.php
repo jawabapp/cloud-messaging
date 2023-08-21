@@ -12,6 +12,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
+use Jawabapp\CloudMessaging\Models\Notification;
 use Jawabapp\CloudMessaging\Traits\HasCloudMessagingQueue;
 
 class SendNotificationJob implements ShouldQueue
@@ -37,14 +38,16 @@ class SendNotificationJob implements ShouldQueue
     private $sent_at;
     private $type;
     private $sender;
+    private $notification;
 
-    public function __construct($message, array $tokens, $sent_at, $type = null, $sender = null)
+    public function __construct($message, array $tokens, $sent_at, $type = null, $sender = null, Notification $notification = null)
     {
         $this->message = $message;
         $this->tokens = $tokens;
         $this->sent_at = $sent_at;
         $this->type = $type;
         $this->sender = $sender;
+        $this->notification = $notification;
     }
 
     /**
@@ -59,6 +62,16 @@ class SendNotificationJob implements ShouldQueue
             'fcm_tokens' => $this->tokens,
             'api_response' => $this->send($this->message, $this->tokens)
         ];
+
+        if($this->notification) {
+            $this->notification->update([
+                'response' => [
+                    'success' => ($this->notification->response['success'] ?? 0) + $response['api_response']['success'],
+                    'failure' => ($this->notification->response['failure'] ?? 0) + $response['api_response']['failure'],
+                ],
+                'status' => 'completed'
+            ]);
+        }
 
         FCMNotificationSent::dispatch($this->message, $response, $this->type, $this->sender);
     }
