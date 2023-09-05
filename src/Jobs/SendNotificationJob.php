@@ -57,7 +57,7 @@ class SendNotificationJob implements ShouldQueue
      */
     public function handle()
     {
-        $response[] = [
+        $response = [
             'sent_at' => $this->sent_at,
             'fcm_tokens' => $this->tokens,
             'api_response' => $this->send($this->message, $this->tokens)
@@ -66,14 +66,17 @@ class SendNotificationJob implements ShouldQueue
         if($this->notification) {
             $this->notification->update([
                 'response' => [
-                    'success' => ($this->notification->response['success'] ?? 0) + $response['api_response']['success'],
-                    'failure' => ($this->notification->response['failure'] ?? 0) + $response['api_response']['failure'],
+                    'success' => ($this->notification->response['success'] ?? 0) + ($response['api_response']['success'] ?? 0),
+                    'failure' => ($this->notification->response['failure'] ?? 0) + ($response['api_response']['failure'] ?? 0),
                 ],
-                'status' => 'completed'
             ]);
         }
 
-        FCMNotificationSent::dispatch($this->message, $response, $this->type, $this->sender);
+        FCMNotificationSent::dispatch($this->message, [$response], $this->type, $this->sender);
+    }
+
+    public static function publish($message, array $tokens, $sent_at, $type = null, $sender = null, Notification $notification = null) {
+        (new self($message, $tokens, $sent_at, $type, $sender, $notification))->handle();
     }
 
     private function getFirebaseAuth() {
@@ -168,7 +171,7 @@ class SendNotificationJob implements ShouldQueue
         return $api_response;
     }
 
-    private function prepareBody(array $message, string $token)
+    private function prepareBody(array $message, string $token): array
     {
         $payload['message'] = [
             "token" => $token,

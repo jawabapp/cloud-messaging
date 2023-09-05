@@ -30,8 +30,13 @@ class FcmNotification
 
         if($tokens) {
             $sent_at = now()->toDateTimeString();
-            foreach ($tokens->chunk(500) as $chunkId => $chunk) {
-                SendNotificationJob::dispatch($message, $chunk->all(), $sent_at, $type, $sender, $notification)->onQueue('cloud-message');
+
+            if($tokens->count() === 1) {
+                SendNotificationJob::publish($message, $tokens->all(), $sent_at, $type, $sender, $notification);
+            } else {
+                foreach ($tokens->chunk(50) as $chunk) {
+                    SendNotificationJob::dispatch($message, $chunk->all(), $sent_at, $type, $sender, $notification)->onQueue('cloud-message');
+                }
             }
         }
     }
