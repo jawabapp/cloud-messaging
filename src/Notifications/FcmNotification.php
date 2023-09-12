@@ -2,85 +2,18 @@
 
 namespace Jawabapp\CloudMessaging\Notifications;
 
-use Carbon\Carbon;
-use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Jawabapp\CloudMessaging\Events\FCMNotificationSent;
+use Jawabapp\CloudMessaging\Jobs\SendNotificationJob;
 use Jawabapp\CloudMessaging\Models\Notification;
 
 class FcmNotification
 {
-    protected $client;
 
-    public function __construct()
-    {
-        $this->client = new Client();
-    }
-
-    private function send($message, array $tokens)
-    {
-        if (!$tokens) {
-            return 'Fcm_Notification (No Tokens)';
-        }
-
-        try {
-            $response = $this->client->request('POST', 'https://fcm.googleapis.com/fcm/send', [
-                    'headers' => [
-                        'Authorization' => 'key=' . env('FIREBASE_SERVER_KEY'),
-                        'Content-Type'  => 'application/json'
-                    ],
-                    'body' => json_encode($this->prepareBody($message, $tokens))
-                ]
-            );
-            return json_decode($response->getBody(), true);
-        } catch (\Exception $e) {
-            return 'Fcm_Notification (' . $e->getMessage() . ')';
-        }
-    }
-
-    private function prepareBody(array $message, array $tokens)
+    public static function sendMessage($message, Collection $fcmTokens, $type = null, $sender = null, Notification $notification = null): void
     {
 
-        $payload = [
-            'registration_ids' => $tokens,
-            'priority' => $message['priority'] ?? 'high',
-        ];
-
-        if (isset($message['mutable_content'])) {
-            $payload['mutable_content'] = $message['mutable_content'];
-        } else {
-            $payload['mutable_content'] = true;
-        }
-
-        if (isset($message['content_available']) && $message['content_available']) {
-            $payload['content_available'] = true;
-        } else {
-            $payload['notification'] = [
-                'title' => $message['notification']['title'] ?? $message['title'] ?? null,
-                'body' => $message['notification']['body'] ?? $message['body'] ?? null,
-                'subtitle' => $message['notification']['subtitle'] ?? $message['subtitle'] ?? null,
-                'image' => $message['notification']['image'] ?? $message['image'] ?? null,
-                'badge' => $message['notification']['badge'] ?? $message['badge'] ?? 1,
-                'sound' => 'default',
-            ];
-        }
-
-        if (!empty($message['data'])) {
-            $payload['data'] = $message['data'];
-        }
-
-        if (!empty($message['notification_id'])) {
-            $payload['data']['notification_id'] = $message['notification_id'];
-        }
-
-        return $payload;
-    }
-
-    public static function sendMessage($message, Collection $dataTokens, $type = null, $sender = null): array
-    {
-
-        $tokens = $dataTokens->pluck('fcm_token');
+        $tokens = $fcmTokens->pluck('fcm_token');
 
         if (config('cloud-messaging.test.types')) {
 
@@ -92,46 +25,31 @@ class FcmNotification
             }
         }
 
-        $response = [];
-
         // remove empty and duplicate
         $tokens = $tokens->filter(function ($value) { return !is_null($value); })->unique()->values();
 
         if($tokens) {
-
-            $client = (new self);
             $sent_at = now()->toDateTimeString();
 
-            foreach ($tokens->chunk(500) as $chunkId => $chunk) {
-                $fcm_tokens = $chunk->all();
-                $response[$chunkId]['sent_at'] = $sent_at;
-                $response[$chunkId]['fcm_tokens'] = $fcm_tokens;
-                $response[$chunkId]['api_response'] = $client->send($message, $fcm_tokens);
+            if($tokens->count() === 1) {
+                SendNotificationJob::publish($message, $tokens->all(), $sent_at, $type, $sender, $notification);
+            } else {
+                foreach ($tokens->chunk(50) as $chunk) {
+                    SendNotificationJob::dispatch($message, $chunk->all(), $sent_at, $type, $sender, $notification)->onQueue('cloud-message');
+                }
             }
-
-            FCMNotificationSent::dispatch($message, $response, $type, $sender);
         }
-
-        return $response;
-
     }
 
-    public static function sendNotification(Notification $notification, $message, $wheres = []) :array
+    public static function sendNotification(Notification $notification, $message, $wheres = []) :void
     {
-
-        $success = 0;
-        $failure = 0;
-
         if($notifiable_model = config('cloud-messaging.notifiable_model')) {
             try {
                 $sender = $notification->id ?? 0;
                 $target = $notification->target ?? [];
 
-                $callable = function ($userTokens) use ($message, $sender, &$success, &$failure) {
-                    $response = self::sendMessage($message, $userTokens, 'cloud-message', $sender);
-
-                    $success += intval($response[0]['api_response']['success'] ?? 0);
-                    $failure += intval($response[0]['api_response']['failure'] ?? 0);
+                $callable = function ($userTokens) use ($message, $sender, $notification) {
+                    self::sendMessage($message, $userTokens, 'cloud-message', $sender, $notification);
                 };
 
                 $query = $notifiable_model::getJawabTargetAudience($target, false, true);
@@ -154,10 +72,5 @@ class FcmNotification
                 Log::error("[PushNotificationJob] send-notification " . $exception->getMessage());
             }
         }
-
-        return [
-            'success' => $success,
-            'failure' => $failure,
-        ];
     }
 }

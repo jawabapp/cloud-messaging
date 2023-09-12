@@ -42,12 +42,7 @@ class RePushNotificationCommand extends Command
                     'notification_id' => $notification->id,
                 ];
 
-                $response = FcmNotification::sendNotification($notification, $message);
-
-                $notification->update([
-                    'response' => $response,
-                    'status' => 'completed'
-                ]);
+                FcmNotification::sendNotification($notification, $message);
 
             }
         }
