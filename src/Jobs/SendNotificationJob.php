@@ -189,11 +189,15 @@ class SendNotificationJob implements ShouldQueue
         }
 
         if (!empty($message['data'])) {
-            $payload['message']['data'] = $message['data'];
+            foreach ($message['data'] as $key => $value) {
+                if($value) {
+                    $payload['message']['data'][$key] = (string) $value;
+                }
+            }
         }
 
         if (!empty($message['notification_id'])) {
-            $payload['message']['data']['notification_id'] = $message['notification_id'];
+            $payload['message']['data']['notification_id'] = (string) $message['notification_id'];
         }
 
         return $payload;
