@@ -189,7 +189,7 @@ class SendNotificationJob implements ShouldQueue
 
             $payload['message']['apns']['payload']['aps']['badge'] = $message['badge'] ?? 1;
             $payload['message']['apns']['payload']['aps']['sound'] = 'default';
-            $payload['message']['apns']['payload']['mutable_content'] = true;
+            $payload['message']['apns']['payload']['aps']['mutable-content'] = 1;
         }
 
         if (!empty($message['data'])) {
