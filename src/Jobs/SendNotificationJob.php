@@ -181,7 +181,7 @@ class SendNotificationJob implements ShouldQueue
         ];
 
         if (isset($message['content_available']) && $message['content_available']) {
-            //$payload['message']['apns']['payload']['aps']['content-available'] = 1;
+            $payload['message']['apns']['payload']['aps']['content-available'] = 1;
         } else {
             $payload['message']['notification'] = [
                 'title' => $message['notification']['title'] ?? $message['title'] ?? null,
