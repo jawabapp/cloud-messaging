@@ -191,20 +191,13 @@ class SendNotificationJob implements ShouldQueue
             $payload['message']['apns']['payload']['aps']['sound'] = 'default';
             $payload['message']['apns']['payload']['aps']['mutable-content'] = 1;
 
-            $payload['message']['android'] = [
-                'priority' => 'high'
-            ];
+            $payload['message']['apns']['headers']['apns-priority'] = '10';
 
-            $payload['message']['apns']['headers'] = [
-                'apns-priority' => '10'
-            ];
+            $payload['message']['webpush']['headers']['Urgency'] = 'high';
+            $payload['message']['webpush']['headers']['TTL'] = '3600';
 
-            $payload['message']['webpush'] = [
-                'headers' => [
-                    'Urgency' => 'high',
-                    'TTL' => '3600'
-                ]
-            ];
+            $payload['message']['android']['priority'] = 'high';
+
         }
 
         if (!empty($message['data'])) {
