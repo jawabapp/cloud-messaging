@@ -180,7 +180,9 @@ class SendNotificationJob implements ShouldQueue
             ]
         ];
 
-        if (!(isset($message['content_available']) && $message['content_available'] == true)) {
+        if (isset($message['content_available']) && $message['content_available']) {
+            $payload['message']['apns']['payload']['aps']['content-available'] = 1;
+        } else {
             $payload['message']['notification'] = [
                 'title' => $message['notification']['title'] ?? $message['title'] ?? null,
                 'body' => $message['notification']['body'] ?? $message['body'] ?? null,
@@ -197,7 +199,6 @@ class SendNotificationJob implements ShouldQueue
             $payload['message']['webpush']['headers']['TTL'] = '3600';
 
             $payload['message']['android']['priority'] = 'high';
-
         }
 
         if (!empty($message['data'])) {
